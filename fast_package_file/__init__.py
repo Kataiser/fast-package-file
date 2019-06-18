@@ -5,6 +5,11 @@ import sys
 import time
 import zlib
 
+try:
+    import tqdm  # a neat progress bar
+except ImportError:
+    tqdm = None
+
 
 class PackagedDataFile:
     def __init__(self, data_file_path: str):
@@ -85,14 +90,12 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
                 files_in.append(filename_in_joined)
 
     if gztemps_deleted != 0:
-        print("deleted {} .gztemp files".format(gztemps_deleted), file=sys.stderr)
+        print("Deleted {} .gztemp files".format(gztemps_deleted), file=sys.stderr)
 
-    try:
-        import tqdm  # a neat progress bar
-    except ImportError:
-        input_iterable = files_in
-    else:
+    if tqdm:
         input_iterable = tqdm.tqdm(files_in, file=sys.stdout, ncols=40, bar_format='{l_bar}{bar}|', disable=not progress_bar)
+    else:
+        input_iterable = files_in
 
     for file_path in input_iterable:
         with open(file_path, 'rb') as input_file:
