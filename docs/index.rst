@@ -5,7 +5,7 @@ Package a directory to a file, with fast file access and compression support
 
 .. code-block:: python
 
-	import fast-package-file
+	import fast_package_file
 
 	# Package a directory into a file
 	fast_package_file.build('a_directory', 'a_package.file')
