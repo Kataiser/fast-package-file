@@ -1,0 +1,148 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>fast-package-file &#8212; fast-package-file  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="fast-package-file">
+<h1>fast-package-file<a class="headerlink" href="#fast-package-file" title="Permalink to this headline">¶</a></h1>
+<p>Package a directory to a file, with fast file access and compression support</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">fast</span><span class="o">-</span><span class="n">package</span><span class="o">-</span><span class="nb">file</span>
+
+<span class="c1"># Package a directory into a file</span>
+<span class="n">fast_package_file</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s1">&#39;a_directory&#39;</span><span class="p">,</span> <span class="s1">&#39;a_package.file&#39;</span><span class="p">)</span>
+
+<span class="c1"># Prepare a package file</span>
+<span class="n">data_package</span> <span class="o">=</span> <span class="n">fast_package_file</span><span class="o">.</span><span class="n">PackagedDataFile</span><span class="p">(</span><span class="s1">&#39;a_package.file&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load a file from the packed directory and save it</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;any.file&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">any_file</span><span class="p">:</span>
+        <span class="n">data_package</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;path\to\any.file&#39;</span><span class="p">)</span>
+
+<span class="c1"># Or just get the raw binary data</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="n">i</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data_package</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;image.png&#39;</span><span class="p">)))</span>
+</pre></div>
+</div>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Is fast because only the data needed is loaded from the package file, total package size is irrelevant</p></li>
+<li><p>Obfuscates files from (most) users</p></li>
+<li><p>Like a .zip file, but doesn’t decompress the entire thing when reading just one file</p></li>
+<li><p>Includes the entire directory and subdirectories, not just surface-level files</p></li>
+<li><p>Files are compressed with Gzip, but only if compression improves file size (per file) and is enabled (per package file)</p></li>
+<li><p>Pretty good error handling when loading package files, just catch fast_package_file.PackageDataError</p></li>
+<li><p>Inspired by video game packaging, such as UE4’s .pak or GTA V’s .rpf formats</p></li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>pip install fast-package-file</p>
+</div></blockquote>
+<p>(Note: not yet on PyPI)</p>
+</div>
+<div class="section" id="contribute">
+<h2>Contribute<a class="headerlink" href="#contribute" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Issue Tracker: <a class="reference external" href="https://github.com/Kataiser/fast-package-file/issues">https://github.com/Kataiser/fast-package-file/issues</a></p></li>
+<li><p>Source Code: <a class="reference external" href="https://github.com/Kataiser/fast-package-file">https://github.com/Kataiser/fast-package-file</a></p></li>
+</ul>
+</div>
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>The project is licensed under the MIT license.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">fast-package-file</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Kataiser.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
