@@ -69,6 +69,8 @@ class PackageDataError(Exception):
 
 # build a directory and all subdirectories into a single file (this part isn't fast tbh)
 def build(directory: str, target: str, compress: bool = True, keep_gzip_threshold: float = 0.98, progress_bar: bool = True):
+    print(directory)
+
     start_time = time.perf_counter()
     loc_data_save = {}
     files_to_add = []
@@ -90,10 +92,10 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
                 files_in.append(filename_in_joined)
 
     if gztemps_deleted != 0:
-        print("Deleted {} .gztemp files".format(gztemps_deleted), file=sys.stderr)
+        print("    Deleted {} .gztemp files".format(gztemps_deleted))
 
     if tqdm:
-        input_iterable = tqdm.tqdm(files_in, file=sys.stdout, ncols=40, bar_format='{l_bar}{bar}|', disable=not progress_bar)
+        input_iterable = tqdm.tqdm(files_in, file=sys.stdout, ncols=40, unit=' files', bar_format='    {l_bar}{bar}|', disable=not progress_bar)
     else:
         input_iterable = files_in
 
@@ -125,17 +127,17 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
                 compressed = False
                 files_to_add.append(file_path)
 
-            file_path_short = '\\'.join(file_path.split(os.sep)[1:])  # removes some redundancy
+            file_path_short = file_path[len(directory) + len(os.sep):]  # removes some redundancy
             loc_data_save[file_path_short] = (current_loc, len(input_file_data), 1 if compressed else 0, input_file_data[0], input_file_data[-1])  # add file to header dictionary
             current_loc += len(input_file_data)  # keep track of offset
 
     loc_data_save_json = json.dumps(loc_data_save, separators=(',', ':')).encode('utf-8')  # convert header to binary
-    loc_data_save = gzip.compress(loc_data_save_json)  # and compress it
-    loc_data_save_length = (len(loc_data_save)).to_bytes(8, byteorder='little')  # get its length as an 8 bit binary
+    loc_data_save_gz = gzip.compress(loc_data_save_json)  # and compress it
+    loc_data_save_length = (len(loc_data_save_gz)).to_bytes(8, byteorder='little')  # get its length as an 8 bit binary
 
     with open(target, 'wb') as out_file:
         out_file.write(loc_data_save_length)  # add the header's length
-        out_file.write(loc_data_save)  # add the header
+        out_file.write(loc_data_save_gz)  # add the header
 
         for file_to_add_path in files_to_add:
             with open(file_to_add_path, 'rb') as file_to_add:  # add the files from either the original data or its .gztemp
@@ -148,7 +150,7 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
     duration = format(time.perf_counter() - start_time, '.2f')
     input_size = format(total_data_in / 1048576, '.2f')
     target_size = format(os.stat(target).st_size / 1048576, '.2f')
-    print("{} ({} MB, {} files) -> {} ({} MB) took {} seconds".format(directory, input_size, len(files_in), target, target_size, duration))
+    print("    {} ({} MB, {} files) -> {} ({} MB) took {} seconds".format(directory, input_size, len(files_in), target, target_size, duration))
 
 
 if __name__ == '__main__':
