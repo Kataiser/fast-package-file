@@ -20,6 +20,10 @@ from PIL import Image
 i = Image.open(io.BytesIO(data_package.load('image.png')))
 ```
 
+Installation
+------------
+	pip install fast-package-file
+
 Documentation
 -------------
 More details will be available at https://fast-package-file.readthedocs.io/en/latest/

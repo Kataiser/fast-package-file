@@ -20,6 +20,10 @@ Package a directory to a file, with fast file access and compression support
 	# Or just get the raw binary data
 	from PIL import Image
 	i = Image.open(io.BytesIO(data_package.load('image.png')))
+	
+Installation
+------------
+	pip install fast-package-file
 
 Features
 --------

@@ -1,0 +1,7 @@
+README.md
+setup.py
+fast_package_file/__init__.py
+fast_package_file.egg-info/PKG-INFO
+fast_package_file.egg-info/SOURCES.txt
+fast_package_file.egg-info/dependency_links.txt
+fast_package_file.egg-info/top_level.txt
