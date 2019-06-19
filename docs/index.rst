@@ -1,4 +1,4 @@
-fast-package-file
+fast_package_file
 =================
 
 Package a directory to a file, with fast file access and compression support
@@ -31,13 +31,6 @@ Features
 - Files are compressed with Gzip, but only if compression improves file size (per file) and is enabled (per package file)
 - Pretty good error handling when loading package files, just catch fast_package_file.PackageDataError
 - Inspired by video game packaging, such as UE4's .pak or GTA V's .rpf formats
-
-Installation
-------------
-
-    pip install fast-package-file
-	
-(Note: not yet on PyPI)
 
 Contribute
 ----------
