@@ -25,18 +25,18 @@ except ImportError:
 class PackagedDataFile:
     def __init__(self, data_file_path: str):
         # load and parse file locations (indices?) header in init in order to not do so each time a file is loaded
-        self.__data_file_path_ = data_file_path
+        self.__data_file_path = data_file_path
 
-        if not os.path.exists(self.__data_file_path_):  # check if file exists
-            raise PackageDataError("{} doesn't seem to exist".format(self.__data_file_path_))
+        if not os.path.exists(self.__data_file_path):  # check if file exists
+            raise PackageDataError("{} doesn't seem to exist".format(self.__data_file_path))
 
-        if not os.access(self.__data_file_path_, os.R_OK):  # check file permissions
-            raise PackageDataError("Don't have read permissions for {}".format(self.__data_file_path_))
+        if not os.access(self.__data_file_path, os.R_OK):  # check file permissions
+            raise PackageDataError("Don't have read permissions for {}".format(self.__data_file_path))
 
-        with open(self.__data_file_path_, 'rb') as data_file_init:
+        with open(self.__data_file_path, 'rb') as data_file_init:
             self.__loc_data_length = int.from_bytes(data_file_init.read(8), byteorder='little')  # read header length
             if self.__loc_data_length < 0 or self.__loc_data_length > 1000000000000:  # 1 TB seems to be a reasonable limit
-                raise PackageDataError("{} is corrupted or malformed (header length is {})".format(self.__data_file_path_, self.__loc_data_length))
+                raise PackageDataError("{} is corrupted or malformed (header length is {})".format(self.__data_file_path, self.__loc_data_length))
 
             loc_data_raw = data_file_init.read(self.__loc_data_length)  # read the compressed header
 
@@ -48,16 +48,16 @@ class PackagedDataFile:
             try:
                 self.__loc_data = json.loads(loc_data_bin)  # and parse
             except json.decoder.JSONDecodeError:
-                raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path_))
+                raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path))
 
     # load an individual file from the build
     def load(self, file: str) -> bytes:
         try:
             file_loc_data = self.__loc_data[file]  # get the file's stats: (offset, length, compressed (1 or 0), first byte, last byte)
         except KeyError:
-            raise PackageDataError("{} is corrupted or malformed (file {} doesn't exist in location header)".format(self.__data_file_path_, file))
+            raise PackageDataError("{} is corrupted or malformed (file {} doesn't exist in location header)".format(self.__data_file_path, file))
 
-        with open(self.__data_file_path_, 'rb') as data_file:
+        with open(self.__data_file_path, 'rb') as data_file:
             data_file.seek(file_loc_data[0] + self.__loc_data_length + 8)  # account for header and the length data
             data_file_raw = data_file.read(file_loc_data[1])
 
@@ -66,7 +66,7 @@ class PackagedDataFile:
             elif file_loc_data[2] == 0:
                 data_file_out = data_file_raw
             else:
-                raise PackageDataError("{} is corrupted or malformed (file compressed state isn't 1 or 0)".format(self.__data_file_path_))
+                raise PackageDataError("{} is corrupted or malformed (file compressed state isn't 1 or 0)".format(self.__data_file_path))
 
             if len(file_loc_data) == 6:  # hash info exists
                 if file_loc_data[5].startswith('md5   '):
@@ -74,21 +74,24 @@ class PackagedDataFile:
                 elif file_loc_data[5].startswith('sha256'):
                     hasher = hashlib.sha256()
                 else:
-                    PackageDataError("{} is corrupted or malformed (hash method seems to be {})".format(self.__data_file_path_, file_loc_data[5]))
+                    PackageDataError("{} is corrupted or malformed (hash method seems to be {})".format(self.__data_file_path, file_loc_data[5]))
 
                 hasher.update(data_file_out)
 
                 if hasher.hexdigest() != file_loc_data[5][6:]:  # confirm hash
-                    raise PackageDataError("{} is corrupted or malformed ({} hash mismatch: {} != {})".format(self.__data_file_path_, file, hasher.hexdigest(), file_loc_data[5][6:]))
+                    raise PackageDataError("{} is corrupted or malformed ({} hash mismatch: {} != {})".format(self.__data_file_path, file, hasher.hexdigest(), file_loc_data[5][6:]))
             else:  # basically a cheap hash
                 if data_file_raw[0] != file_loc_data[3]:  # check if first byte matches
                     raise PackageDataError("{} is corrupted or malformed (file {}'s first byte should be {}, but was loaded as {})".format(
-                                           self.__data_file_path_, file, data_file_raw[0], file_loc_data[3]))
+                                           self.__data_file_path, file, data_file_raw[0], file_loc_data[3]))
                 elif data_file_raw[-1] != file_loc_data[4]:  # check if last byte matches
                     raise PackageDataError("{} is corrupted or malformed (file {}'s last byte should be {}, but was loaded as {})".format(
-                                           self.__data_file_path_, file, data_file_raw[-1], file_loc_data[4]))
+                                           self.__data_file_path, file, data_file_raw[-1], file_loc_data[4]))
 
             return data_file_out
+
+    def __repr__(self):
+        return "<fast_package_file.PackagedDataFile object for {} ({} files)>".format(self.__data_file_path, len(self.__loc_data))
 
 
 # only used when reading packages
