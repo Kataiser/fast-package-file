@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import time
+from typing import List
 
 try:
     import tqdm  # a neat progress bar
@@ -51,7 +52,7 @@ class PackagedDataFile:
                 raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path))
 
     # load an individual file from the build
-    def load(self, file: str) -> bytes:
+    def load_file(self, file: str) -> bytes:
         try:
             file_loc_data = self.__loc_data[file]  # get the file's stats: (offset, length, compressed (1 or 0), first byte, last byte)
         except KeyError:
@@ -66,7 +67,7 @@ class PackagedDataFile:
             elif file_loc_data[2] == 0:
                 data_file_out = data_file_raw
             else:
-                raise PackageDataError("{} is corrupted or malformed (file compressed state isn't 1 or 0)".format(self.__data_file_path))
+                raise PackageDataError("{} is corrupted or malformed ({}'s compressed state isn't 1 or 0)".format(self.__data_file_path, file))
 
             if len(file_loc_data) == 6:  # hash info exists
                 if file_loc_data[5].startswith('md5   '):
@@ -74,7 +75,7 @@ class PackagedDataFile:
                 elif file_loc_data[5].startswith('sha256'):
                     hasher = hashlib.sha256()
                 else:
-                    PackageDataError("{} is corrupted or malformed (hash method seems to be {})".format(self.__data_file_path, file_loc_data[5]))
+                    raise PackageDataError("{} is corrupted or malformed (hash method seems to be {})".format(self.__data_file_path, file_loc_data[5]))
 
                 hasher.update(data_file_out)
 
@@ -90,8 +91,21 @@ class PackagedDataFile:
 
             return data_file_out
 
+    # load multiple files at once (most likely a subdirectory)
+    def load_bulk(self, prefix: str = '', postfix: str = '') -> List[bytes]:
+        out_data = []
+
+        for file_in_package in self.__loc_data.keys():
+            if file_in_package.startswith(prefix) and file_in_package.endswith(postfix):
+                out_data.append(self.load_file(file_in_package))
+
+        if out_data:
+            return out_data
+        else:
+            raise PackageDataError("{} is corrupted or malformed (no file paths start with '{}' and end with '{}')".format(self.__data_file_path, prefix, postfix))
+
     def __repr__(self):
-        return "<fast_package_file.PackagedDataFile object for {} ({} files)>".format(self.__data_file_path, len(self.__loc_data))
+        return "<fast_package_file.PackagedDataFile object for {} ({} files, {} bytes)>".format(self.__data_file_path, len(self.__loc_data), os.stat(self.__data_file_path).st_size)
 
 
 # only used when reading packages
