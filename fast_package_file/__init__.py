@@ -9,11 +9,12 @@ __copyright__ = "Copyright (c) 2019 Kataiser (https://github.com/Kataiser)"
 __license__ = "MIT"
 
 import gzip
+import hashlib
+import io
 import json
 import os
 import sys
 import time
-import zlib
 
 try:
     import tqdm  # a neat progress bar
@@ -37,13 +38,17 @@ class PackagedDataFile:
             if self.__loc_data_length < 0 or self.__loc_data_length > 1000000000000:  # 1 TB seems to be a reasonable limit
                 raise PackageDataError("{} is corrupted or malformed (header length is {})".format(self.__data_file_path_, self.__loc_data_length))
 
-            loc_data_gz = data_file_init.read(self.__loc_data_length)  # read the compressed header
+            loc_data_raw = data_file_init.read(self.__loc_data_length)  # read the compressed header
 
             try:
-                loc_data_raw = gzip.decompress(loc_data_gz)  # decompress
-                self.__loc_data = json.loads(loc_data_raw)  # and parse
-            except (zlib.error, json.decoder.JSONDecodeError) as e:
-                raise PackageDataError("{} is corrupted or malformed ({} {})".format(self.__data_file_path_, type(e), e))
+                loc_data_bin = gzip.decompress(loc_data_raw)  # decompress
+            except OSError:
+                loc_data_bin = loc_data_raw
+
+            try:
+                self.__loc_data = json.loads(loc_data_bin)  # and parse
+            except json.decoder.JSONDecodeError:
+                raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path_))
 
     # load an individual file from the build
     def load(self, file: str) -> bytes:
@@ -56,20 +61,34 @@ class PackagedDataFile:
             data_file.seek(file_loc_data[0] + self.__loc_data_length + 8)  # account for header and the length data
             data_file_raw = data_file.read(file_loc_data[1])
 
-            # hashing is slow, so...
-            if data_file_raw[0] != file_loc_data[3]:  # check if first byte matches
-                raise PackageDataError("{} is corrupted or malformed (file {}'s first byte should be {}, but was loaded as {})".format(
-                                       self.__data_file_path_, file, data_file_raw[0], file_loc_data[3]))
-            elif data_file_raw[-1] != file_loc_data[4]:  # check if last byte matches
-                raise PackageDataError("{} is corrupted or malformed (file {}'s last byte should be {}, but was loaded as {})".format(
-                                       self.__data_file_path_, file, data_file_raw[-1], file_loc_data[4]))
-
-            if file_loc_data[2] == 1:
-                return gzip.decompress(data_file_raw)
+            if file_loc_data[2] == 1:  # is compressed
+                data_file_out = gzip.decompress(data_file_raw)
             elif file_loc_data[2] == 0:
-                return data_file_raw
+                data_file_out = data_file_raw
             else:
                 raise PackageDataError("{} is corrupted or malformed (file compressed state isn't 1 or 0)".format(self.__data_file_path_))
+
+            if len(file_loc_data) == 6:  # hash info exists
+                if file_loc_data[5].startswith('md5   '):
+                    hasher = hashlib.md5()
+                elif file_loc_data[5].startswith('sha256'):
+                    hasher = hashlib.sha256()
+                else:
+                    PackageDataError("{} is corrupted or malformed (hash method seems to be {})".format(self.__data_file_path_, file_loc_data[5]))
+
+                hasher.update(data_file_out)
+
+                if hasher.hexdigest() != file_loc_data[5][6:]:  # confirm hash
+                    raise PackageDataError("{} is corrupted or malformed ({} hash mismatch: {} != {})".format(self.__data_file_path_, file, hasher.hexdigest(), file_loc_data[5][6:]))
+            else:  # basically a cheap hash
+                if data_file_raw[0] != file_loc_data[3]:  # check if first byte matches
+                    raise PackageDataError("{} is corrupted or malformed (file {}'s first byte should be {}, but was loaded as {})".format(
+                                           self.__data_file_path_, file, data_file_raw[0], file_loc_data[3]))
+                elif data_file_raw[-1] != file_loc_data[4]:  # check if last byte matches
+                    raise PackageDataError("{} is corrupted or malformed (file {}'s last byte should be {}, but was loaded as {})".format(
+                                           self.__data_file_path_, file, data_file_raw[-1], file_loc_data[4]))
+
+            return data_file_out
 
 
 # only used when reading packages
@@ -78,7 +97,7 @@ class PackageDataError(Exception):
 
 
 # build a directory and all subdirectories into a single file (this part isn't fast tbh)
-def build(directory: str, target: str, compress: bool = True, keep_gzip_threshold: float = 0.98, progress_bar: bool = True):
+def build(directory: str, target: str, compress: bool = True, keep_gzip_threshold: float = 0.98, progress_bar: bool = True, hash_mode=None):
     print(directory)
 
     start_time = time.perf_counter()
@@ -116,7 +135,7 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
             is_compressed = [c_format for c_format in compressed_formats if file_path.endswith(c_format)]  # check file extension
 
             if compress and not is_compressed:
-                input_file_data_gzip = gzip.compress(input_file_data_raw)
+                input_file_data_gzip = _gzip_compress_fix(input_file_data_raw)
 
                 if len(input_file_data_gzip) < len(input_file_data_raw) * keep_gzip_threshold:  # if compression improves file size
                     input_file_data = input_file_data_gzip
@@ -138,16 +157,26 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
                 files_to_add.append(file_path)
 
             file_path_short = file_path[len(directory) + len(os.sep):]  # removes some redundancy
-            loc_data_save[file_path_short] = (current_loc, len(input_file_data), 1 if compressed else 0, input_file_data[0], input_file_data[-1])  # add file to header dictionary
+            loc_data_save[file_path_short] = [current_loc, len(input_file_data), 1 if compressed else 0, input_file_data[0], input_file_data[-1]]  # add file to header dictionary
             current_loc += len(input_file_data)  # keep track of offset
 
+            # calculate and add hash, if enabled
+            if hash_mode == 'md5':
+                hasher = hashlib.md5()
+                hasher.update(input_file_data_raw)
+                loc_data_save[file_path_short].append('md5   {}'.format(hasher.hexdigest()))
+            elif hash_mode == 'sha256':
+                hasher = hashlib.sha256()
+                hasher.update(input_file_data_raw)
+                loc_data_save[file_path_short].append('sha256{}'.format(hasher.hexdigest()))
+
     loc_data_save_json = json.dumps(loc_data_save, separators=(',', ':')).encode('utf-8')  # convert header to binary
-    loc_data_save_gz = gzip.compress(loc_data_save_json)  # and compress it
-    loc_data_save_length = (len(loc_data_save_gz)).to_bytes(8, byteorder='little')  # get its length as an 8 bit binary
+    loc_data_save_out = _gzip_compress_fix(loc_data_save_json) if compress else loc_data_save_json  # and compress it
+    loc_data_save_length = (len(loc_data_save_out)).to_bytes(8, byteorder='little')  # get its length as an 8 bit binary
 
     with open(target, 'wb') as out_file:
         out_file.write(loc_data_save_length)  # add the header's length
-        out_file.write(loc_data_save_gz)  # add the header
+        out_file.write(loc_data_save_out)  # add the header
 
         for file_to_add_path in files_to_add:
             with open(file_to_add_path, 'rb') as file_to_add:  # add the files from either the original data or its .gztemp
@@ -161,6 +190,16 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
     input_size = format(total_data_in / 1048576, '.2f')
     target_size = format(os.stat(target).st_size / 1048576, '.2f')
     print("    {} ({} MB, {} files) -> {} ({} MB) took {} seconds".format(directory, input_size, len(files_in), target, target_size, duration))
+
+
+# basically gzip.compress(), but deterministic (mtime=0)
+def _gzip_compress_fix(data: bytes) -> bytes:
+    buffer = io.BytesIO()
+
+    with gzip.GzipFile(mode='wb', fileobj=buffer, mtime=0) as temp_file:
+        temp_file.write(data)
+
+    return buffer.getvalue()
 
 
 if __name__ == '__main__':
