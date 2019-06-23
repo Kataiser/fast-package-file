@@ -93,7 +93,12 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
                     test_compressed_bad_header.write(test_compressed_data.read()[1:])
 
             fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_compressed_bad_header.data'))
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (header length is 2233785415175766017)".format(os.path.join('test_dir', 'test_compressed_bad_header.data')))
+
+        try:
+            self.assertTrue("{} is corrupted or malformed (header length is ".format(os.path.join('test_dir', 'test_compressed_bad_header.data')) in e.exception.args[0])
+        except AssertionError:
+            print(e.exception.args[0])
+            raise
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
             with open(os.path.join('test_dir', 'test_compressed.data'), 'rb') as test_compressed_data:
