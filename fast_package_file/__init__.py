@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import time
+import zlib
 from typing import List
 
 try:
@@ -29,10 +30,10 @@ class PackagedDataFile:
         self.__data_file_path = data_file_path
 
         if not os.path.exists(self.__data_file_path):  # check if file exists
-            raise PackageDataError("{} doesn't seem to exist".format(self.__data_file_path))
+            raise PackageDataError("'{}' doesn't seem to exist".format(self.__data_file_path))
 
         if not os.access(self.__data_file_path, os.R_OK):  # check file permissions
-            raise PackageDataError("Don't have read permissions for {}".format(self.__data_file_path))
+            raise PackageDataError("Don't have read permissions for '{}'".format(self.__data_file_path))
 
         with open(self.__data_file_path, 'rb') as data_file_init:
             self.__loc_data_length = int.from_bytes(data_file_init.read(8), byteorder='little')  # read header length
@@ -41,55 +42,57 @@ class PackagedDataFile:
 
             loc_data_raw = data_file_init.read(self.__loc_data_length)  # read the compressed header
 
-            try:
-                loc_data_bin = gzip.decompress(loc_data_raw)  # decompress
-            except OSError:
-                loc_data_bin = loc_data_raw
+        try:
+            loc_data_bin = gzip.decompress(loc_data_raw)  # decompress
+        except OSError:
+            loc_data_bin = loc_data_raw
+        except zlib.error as e:
+            raise PackageDataError("{} is corrupted or malformed (couldn't decompress header: {})".format(self.__data_file_path, e))
 
-            try:
-                self.__loc_data = json.loads(loc_data_bin)  # and parse
-            except json.decoder.JSONDecodeError:
-                raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path))
+        try:
+            self.__loc_data = json.loads(loc_data_bin)  # and parse
+        except json.decoder.JSONDecodeError:
+            raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path))
 
     # load an individual file from the build
     def load_file(self, file: str) -> bytes:
         try:
             file_loc_data = self.__loc_data[file]  # get the file's stats: (offset, length, compressed (1 or 0), first byte, last byte)
         except KeyError:
-            raise PackageDataError("{} is corrupted or malformed (file {} doesn't exist in location header)".format(self.__data_file_path, file))
+            raise PackageDataError("{} is corrupted or malformed (file '{}' doesn't exist in location header)".format(self.__data_file_path, file))
 
         with open(self.__data_file_path, 'rb') as data_file:
             data_file.seek(file_loc_data[0] + self.__loc_data_length + 8)  # account for header and the length data
             data_file_raw = data_file.read(file_loc_data[1])
 
-            if file_loc_data[2] == 1:  # is compressed
-                data_file_out = gzip.decompress(data_file_raw)
-            elif file_loc_data[2] == 0:
-                data_file_out = data_file_raw
+        if file_loc_data[2] == 1:  # is compressed
+            data_file_out = gzip.decompress(data_file_raw)
+        elif file_loc_data[2] == 0:
+            data_file_out = data_file_raw
+        else:
+            raise PackageDataError("{} is corrupted or malformed (compressed state of '{}' is {}, should be 1 or 0)".format(self.__data_file_path, file, file_loc_data[2]))
+
+        if len(file_loc_data) == 6:  # hash info exists
+            if file_loc_data[5].startswith('md5   '):
+                hasher = hashlib.md5()
+            elif file_loc_data[5].startswith('sha256'):
+                hasher = hashlib.sha256()
             else:
-                raise PackageDataError("{} is corrupted or malformed ({}'s compressed state isn't 1 or 0)".format(self.__data_file_path, file))
+                raise PackageDataError("{} is corrupted or malformed (hash method seems to be '{}')".format(self.__data_file_path, file_loc_data[5][:6]))
 
-            if len(file_loc_data) == 6:  # hash info exists
-                if file_loc_data[5].startswith('md5   '):
-                    hasher = hashlib.md5()
-                elif file_loc_data[5].startswith('sha256'):
-                    hasher = hashlib.sha256()
-                else:
-                    raise PackageDataError("{} is corrupted or malformed (hash method seems to be {})".format(self.__data_file_path, file_loc_data[5]))
+            hasher.update(data_file_out)
 
-                hasher.update(data_file_out)
+            if hasher.hexdigest() != file_loc_data[5][6:]:  # confirm hash
+                raise PackageDataError("{} is corrupted or malformed ('{}' hash mismatch: {} != {})".format(self.__data_file_path, file, hasher.hexdigest(), file_loc_data[5][6:]))
+        else:  # basically a cheap hash
+            if data_file_raw[0] != file_loc_data[3]:  # check if first byte matches
+                raise PackageDataError("{} is corrupted or malformed (first byte of file '{}' should be {}, but was loaded as {})".format(
+                                       self.__data_file_path, file, data_file_raw[0], file_loc_data[3]))
+            elif data_file_raw[-1] != file_loc_data[4]:  # check if last byte matches
+                raise PackageDataError("{} is corrupted or malformed (last byte of file '{}' should be {}, but was loaded as {})".format(
+                                       self.__data_file_path, file, data_file_raw[-1], file_loc_data[4]))
 
-                if hasher.hexdigest() != file_loc_data[5][6:]:  # confirm hash
-                    raise PackageDataError("{} is corrupted or malformed ({} hash mismatch: {} != {})".format(self.__data_file_path, file, hasher.hexdigest(), file_loc_data[5][6:]))
-            else:  # basically a cheap hash
-                if data_file_raw[0] != file_loc_data[3]:  # check if first byte matches
-                    raise PackageDataError("{} is corrupted or malformed (file {}'s first byte should be {}, but was loaded as {})".format(
-                                           self.__data_file_path, file, data_file_raw[0], file_loc_data[3]))
-                elif data_file_raw[-1] != file_loc_data[4]:  # check if last byte matches
-                    raise PackageDataError("{} is corrupted or malformed (file {}'s last byte should be {}, but was loaded as {})".format(
-                                           self.__data_file_path, file, data_file_raw[-1], file_loc_data[4]))
-
-            return data_file_out
+        return data_file_out
 
     # load multiple files at once (most likely a subdirectory)
     def load_bulk(self, prefix: str = '', postfix: str = '') -> List[bytes]:
