@@ -177,18 +177,19 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
                 files_to_add.append(file_path)
 
             file_path_short = file_path[len(directory) + len(os.sep):]  # removes some redundancy
-            loc_data_save[file_path_short] = [current_loc, len(input_file_data), 1 if compressed else 0, input_file_data[0], input_file_data[-1]]  # add file to header dictionary
+            file_path_out = file_path_short.replace(os.sep, '\\')  # makes building uniform across OSs
+            loc_data_save[file_path_out] = [current_loc, len(input_file_data), 1 if compressed else 0, input_file_data[0], input_file_data[-1]]  # add file to header dictionary
             current_loc += len(input_file_data)  # keep track of offset
 
             # calculate and add hash, if enabled
             if hash_mode == 'md5':
                 hasher = hashlib.md5()
                 hasher.update(input_file_data_raw)
-                loc_data_save[file_path_short].append('md5   {}'.format(hasher.hexdigest()))
+                loc_data_save[file_path_out].append('md5   {}'.format(hasher.hexdigest()))
             elif hash_mode == 'sha256':
                 hasher = hashlib.sha256()
                 hasher.update(input_file_data_raw)
-                loc_data_save[file_path_short].append('sha256{}'.format(hasher.hexdigest()))
+                loc_data_save[file_path_out].append('sha256{}'.format(hasher.hexdigest()))
 
     loc_data_save_json = json.dumps(loc_data_save, separators=(',', ':')).encode('utf-8')  # convert header to binary
     loc_data_save_out = _gzip_compress_fix(loc_data_save_json) if compress else loc_data_save_json  # and compress it
