@@ -1,4 +1,6 @@
 [![Documentation Status](https://readthedocs.org/projects/fast-package-file/badge/?version=latest)](https://fast-package-file.readthedocs.io/en/latest/?badge=latest)
+[![PyPI](https://img.shields.io/pypi/v/fast-package-file.svg)](https://pypi.org/project/fast-package-file/)
+
 # fast_package_file
 Package a directory to a file, with fast file access and compression support
 
