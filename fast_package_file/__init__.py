@@ -143,6 +143,8 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
     if gztemps_deleted != 0:
         print("    Deleted {} .gztemp files".format(gztemps_deleted))
 
+    files_in.sort(key=str.lower)
+
     if tqdm:
         input_iterable = tqdm.tqdm(files_in, file=sys.stdout, ncols=40, unit=' files', bar_format='    {l_bar}{bar}|', disable=not progress_bar)
     else:
