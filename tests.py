@@ -121,7 +121,12 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
                     test_uncompressed_bad_header.write(test_uncompressed_data_read[120:])
 
             fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_uncompressed_bad_json.data'))
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (couldn't decode JSON)".format(os.path.join('test_dir', 'test_uncompressed_bad_json.data')))
+            
+        try:
+            self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (couldn't decode JSON)".format(os.path.join('test_dir', 'test_uncompressed_bad_json.data')))
+        except AssertionError:
+            self.assertEqual(e.exception.args[0], "{} is corrupted or malformed ('utf-8' codec can't decode byte 0x80 in position 1501: invalid start byte)".format(
+                                                  os.path.join('test_dir', 'test_uncompressed_bad_json.data')))
 
         # for PackagedDataFile.load_file()
         with self.assertRaises(fast_package_file.PackageDataError) as e:
@@ -157,7 +162,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
                     test_md5_uncompressed_bad_filedata_data.write(test_md5_uncompressed_data_read[3500:])
 
             fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_md5_uncompressed_bad_filedata.data')).load_file('conf.py')
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed ('conf.py' hash mismatch: 3a335971d1353e3bb7e4e293ee6444bc != e0bff95e9ef5da195903c03bd057d282)".format(
+        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed ('conf.py' hash mismatch: 6e39fb9cf781d2990833a9faea5f9624 != e0bff95e9ef5da195903c03bd057d282)".format(
                                               os.path.join('test_dir', 'test_md5_uncompressed_bad_filedata.data')))
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
@@ -169,7 +174,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
                     test_uncompressed_bad_filedata_data.write(test_uncompressed_data_read[3500:])
 
             fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_uncompressed_bad_filedata.data')).load_file('conf.py')
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (last byte of file 'conf.py' should be 110, but was loaded as 10)".format(
+        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (first byte of file 'conf.py' should be 97, but was loaded as 35)".format(
                                               os.path.join('test_dir', 'test_uncompressed_bad_filedata.data')))
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
