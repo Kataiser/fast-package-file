@@ -1,3 +1,2 @@
 __pycache__/
-test_dir/*.data
-test_dir/docs_v1.0_testing/
+test_dir/test_*.data
