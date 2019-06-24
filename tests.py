@@ -1,3 +1,4 @@
+import base64
 import os
 import unittest
 
@@ -5,18 +6,22 @@ import fast_package_file
 
 
 class TestTF2RichPresenseFunctions(unittest.TestCase):
+    def setUp(self):
+        if 'test_dir' not in os.getcwd():
+            os.chdir('test_dir')
+
     # tests building packages against the reference builds
     def test_build(self):
         if [ref for ref in ref_list if not os.path.exists(ref)]:
             # build references only if needed
             build_references()
 
-        fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), test_list[0])
-        fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), test_list[1], compress=False)
-        fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), test_list[2])
-        fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), test_list[3], hash_mode='md5', compress=False)
-        fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), test_list[4])
-        fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), test_list[5], hash_mode='sha256', compress=False)
+        fast_package_file.build('docs_v1.0_testing', test_list[0])
+        fast_package_file.build('docs_v1.0_testing', test_list[1], compress=False)
+        fast_package_file.build('docs_v1.0_testing', test_list[2])
+        fast_package_file.build('docs_v1.0_testing', test_list[3], hash_mode='md5', compress=False)
+        fast_package_file.build('docs_v1.0_testing', test_list[4])
+        fast_package_file.build('docs_v1.0_testing', test_list[5], hash_mode='sha256', compress=False)
 
         file_data = {}
         for file in ref_list + test_list:
@@ -27,8 +32,8 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             try:
                 self.assertEqual(file_data[ref.replace('ref', 'test')], file_data[ref])
             except AssertionError:
-                print(file_data[ref.replace('ref', 'test')])
-                print(file_data[ref])
+                print(base64.b64encode(file_data[ref.replace('ref', 'test')]))
+                print(base64.b64encode(file_data[ref]))
                 raise
 
     # test loading the file location data
@@ -49,12 +54,12 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
         for test_file in test_list:
             test_file_loaded = fast_package_file.PackagedDataFile(test_file)
 
-            with open(os.path.join('test_dir', 'docs_v1.0_testing', 'index.rst'), 'rb') as dist_file_ref:
+            with open(os.path.join('docs_v1.0_testing', 'index.rst'), 'rb') as dist_file_ref:
                 dist_file_ref_data = dist_file_ref.read()
 
                 self.assertEqual(test_file_loaded.load_file('index.rst'), dist_file_ref_data)
 
-            with open(os.path.join('test_dir', 'docs_v1.0_testing', '_build', 'html', 'index.html'), 'rb') as dist_file_ref:
+            with open(os.path.join('docs_v1.0_testing', '_build', 'html', 'index.html'), 'rb') as dist_file_ref:
                 dist_file_ref_data = dist_file_ref.read()
 
                 self.assertEqual(test_file_loaded.load_file(r'_build\html\index.html'), dist_file_ref_data)
@@ -65,9 +70,9 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             # if running test individually
             self.test_build()
 
-        with open(os.path.join('test_dir', 'docs_v1.0_testing', '_build', 'doctrees', 'environment.pickle'), 'rb') as environment_pickle:
+        with open(os.path.join('docs_v1.0_testing', '_build', 'doctrees', 'environment.pickle'), 'rb') as environment_pickle:
             environment_pickle_ref = environment_pickle.read()
-        with open(os.path.join('test_dir', 'docs_v1.0_testing', '_build', 'html', 'genindex.html'), 'rb') as genindex_html:
+        with open(os.path.join('docs_v1.0_testing', '_build', 'html', 'genindex.html'), 'rb') as genindex_html:
             genindex_html_ref = genindex_html.read()
 
         for test_file in test_list:
@@ -88,117 +93,110 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
         self.assertEqual(e.exception.args[0], "'a non-existent file' doesn't seem to exist")
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
-            with open(os.path.join('test_dir', 'test_compressed.data'), 'rb') as test_compressed_data:
-                with open(os.path.join('test_dir', 'test_compressed_bad_header.data'), 'wb') as test_compressed_bad_header:
+            with open('test_compressed.data', 'rb') as test_compressed_data:
+                with open('test_compressed_bad_header.data', 'wb') as test_compressed_bad_header:
                     test_compressed_bad_header.write(test_compressed_data.read()[1:])
 
-            fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_compressed_bad_header.data'))
+            fast_package_file.PackagedDataFile('test_compressed_bad_header.data')
 
         try:
-            self.assertTrue("{} is corrupted or malformed (header length is ".format(os.path.join('test_dir', 'test_compressed_bad_header.data')) in e.exception.args[0])
+            self.assertTrue("test_compressed_bad_header.data is corrupted or malformed (header length is " in e.exception.args[0])
         except AssertionError:
             print(e.exception.args[0])
             raise
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
-            with open(os.path.join('test_dir', 'test_compressed.data'), 'rb') as test_compressed_data:
+            with open('test_compressed.data', 'rb') as test_compressed_data:
                 test_compressed_data_read = test_compressed_data.read()
 
-                with open(os.path.join('test_dir', 'test_compressed_bad_json.data'), 'wb') as test_compressed_bad_header:
+                with open('test_compressed_bad_json.data', 'wb') as test_compressed_bad_header:
                     test_compressed_bad_header.write(test_compressed_data_read[:100])
                     test_compressed_bad_header.write(test_compressed_data_read[120:])
 
-            fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_compressed_bad_json.data'))
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (couldn't decompress header: Error -3 while decompressing data: invalid distance too far back)".format(
-                                              os.path.join('test_dir', 'test_compressed_bad_json.data')))
+            fast_package_file.PackagedDataFile('test_compressed_bad_json.data')
+        self.assertEqual(e.exception.args[0], "test_compressed_bad_json.data is corrupted or malformed "
+                                              "(couldn't decompress header: Error -3 while decompressing data: invalid distance too far back)")
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
-            with open(os.path.join('test_dir', 'test_uncompressed.data'), 'rb') as test_uncompressed_data:
+            with open('test_uncompressed.data', 'rb') as test_uncompressed_data:
                 test_uncompressed_data_read = test_uncompressed_data.read()
 
-                with open(os.path.join('test_dir', 'test_uncompressed_bad_json.data'), 'wb') as test_uncompressed_bad_header:
+                with open('test_uncompressed_bad_json.data', 'wb') as test_uncompressed_bad_header:
                     test_uncompressed_bad_header.write(test_uncompressed_data_read[:100])
                     test_uncompressed_bad_header.write(test_uncompressed_data_read[120:])
 
-            fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_uncompressed_bad_json.data'))
+            fast_package_file.PackagedDataFile('test_uncompressed_bad_json.data')
             
         try:
-            self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (couldn't decode JSON)".format(os.path.join('test_dir', 'test_uncompressed_bad_json.data')))
+            self.assertEqual(e.exception.args[0], "test_uncompressed_bad_json.data is corrupted or malformed (couldn't decode JSON)")
         except AssertionError:
-            self.assertEqual(e.exception.args[0], "{} is corrupted or malformed ('utf-8' codec can't decode byte 0x80 in position 1501: invalid start byte)".format(
-                                                  os.path.join('test_dir', 'test_uncompressed_bad_json.data')))
+            self.assertEqual(e.exception.args[0], "test_uncompressed_bad_json.data is corrupted or malformed ('utf-8' codec can't decode byte 0x80 in position 1501: invalid start byte)")
 
         # for PackagedDataFile.load_file()
         with self.assertRaises(fast_package_file.PackageDataError) as e:
-            test_compressed_data = fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_compressed.data'))
+            test_compressed_data = fast_package_file.PackagedDataFile('test_compressed.data')
             test_compressed_data.load_file('a non-existent file')
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (file 'a non-existent file' doesn't exist in location header)".format(
-                                              os.path.join('test_dir', 'test_compressed.data')))
+        self.assertEqual(e.exception.args[0], "test_compressed.data is corrupted or malformed (file 'a non-existent file' doesn't exist in location header)")
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
-            with open(os.path.join('test_dir', 'test_uncompressed.data'), 'rb') as test_uncompressed_data:
-                with open(os.path.join('test_dir', 'test_uncompressed_bad_cstate.data'), 'wb') as test_uncompressed_bad_cstate:
+            with open('test_uncompressed.data', 'rb') as test_uncompressed_data:
+                with open('test_uncompressed_bad_cstate.data', 'wb') as test_uncompressed_bad_cstate:
                     test_uncompressed_bad_cstate.write(test_uncompressed_data.read().replace(b',0,', b',2,'))
 
-            fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_uncompressed_bad_cstate.data')).load_file('index.rst')
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (compressed state of 'index.rst' is 2, should be 1 or 0)".format(
-                                              os.path.join('test_dir', 'test_uncompressed_bad_cstate.data')))
+            fast_package_file.PackagedDataFile('test_uncompressed_bad_cstate.data').load_file('index.rst')
+        self.assertEqual(e.exception.args[0], "test_uncompressed_bad_cstate.data is corrupted or malformed (compressed state of 'index.rst' is 2, should be 1 or 0)")
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
-            with open(os.path.join('test_dir', 'test_md5_uncompressed.data'), 'rb') as test_md5_uncompressed_data:
-                with open(os.path.join('test_dir', 'test_md5_uncompressed_bad_hash_method.data'), 'wb') as test_md5_uncompressed_bad_hash_method_data:
+            with open('test_md5_uncompressed.data', 'rb') as test_md5_uncompressed_data:
+                with open('test_md5_uncompressed_bad_hash_method.data', 'wb') as test_md5_uncompressed_bad_hash_method_data:
                     test_md5_uncompressed_bad_hash_method_data.write(test_md5_uncompressed_data.read().replace(b',"md5   ', b',"mi6   '))
 
-            fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_md5_uncompressed_bad_hash_method.data')).load_file('index.rst')
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (hash method seems to be 'mi6   ')".format(
-                                              os.path.join('test_dir', 'test_md5_uncompressed_bad_hash_method.data')))
+            fast_package_file.PackagedDataFile('test_md5_uncompressed_bad_hash_method.data').load_file('index.rst')
+        self.assertEqual(e.exception.args[0], "test_md5_uncompressed_bad_hash_method.data is corrupted or malformed (hash method seems to be 'mi6   ')")
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
-            with open(os.path.join('test_dir', 'test_md5_uncompressed.data'), 'rb') as test_md5_uncompressed_data:
+            with open('test_md5_uncompressed.data', 'rb') as test_md5_uncompressed_data:
                 test_md5_uncompressed_data_read = test_md5_uncompressed_data.read()
 
-                with open(os.path.join('test_dir', 'test_md5_uncompressed_bad_filedata.data'), 'wb') as test_md5_uncompressed_bad_filedata_data:
+                with open('test_md5_uncompressed_bad_filedata.data', 'wb') as test_md5_uncompressed_bad_filedata_data:
                     test_md5_uncompressed_bad_filedata_data.write(test_md5_uncompressed_data_read[:3000])
                     test_md5_uncompressed_bad_filedata_data.write(test_md5_uncompressed_data_read[3500:])
 
-            fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_md5_uncompressed_bad_filedata.data')).load_file('conf.py')
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed ('conf.py' hash mismatch: 6e39fb9cf781d2990833a9faea5f9624 != e0bff95e9ef5da195903c03bd057d282)".format(
-                                              os.path.join('test_dir', 'test_md5_uncompressed_bad_filedata.data')))
+            fast_package_file.PackagedDataFile('test_md5_uncompressed_bad_filedata.data').load_file('conf.py')
+        self.assertEqual(e.exception.args[0], "test_md5_uncompressed_bad_filedata.data is corrupted or malformed "
+                                              "('conf.py' hash mismatch: 6e39fb9cf781d2990833a9faea5f9624 != e0bff95e9ef5da195903c03bd057d282)")
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
-            with open(os.path.join('test_dir', 'test_uncompressed.data'), 'rb') as test_uncompressed_data:
+            with open('test_uncompressed.data', 'rb') as test_uncompressed_data:
                 test_uncompressed_data_read = test_uncompressed_data.read()
 
-                with open(os.path.join('test_dir', 'test_uncompressed_bad_filedata.data'), 'wb') as test_uncompressed_bad_filedata_data:
+                with open('test_uncompressed_bad_filedata.data', 'wb') as test_uncompressed_bad_filedata_data:
                     test_uncompressed_bad_filedata_data.write(test_uncompressed_data_read[:3000])
                     test_uncompressed_bad_filedata_data.write(test_uncompressed_data_read[3500:])
 
-            fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_uncompressed_bad_filedata.data')).load_file('conf.py')
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (first byte of file 'conf.py' should be 97, but was loaded as 35)".format(
-                                              os.path.join('test_dir', 'test_uncompressed_bad_filedata.data')))
+            fast_package_file.PackagedDataFile('test_uncompressed_bad_filedata.data').load_file('conf.py')
+        self.assertEqual(e.exception.args[0], "test_uncompressed_bad_filedata.data is corrupted or malformed (first byte of file 'conf.py' should be 97, but was loaded as 35)")
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
-            fast_package_file.PackagedDataFile(os.path.join('test_dir', 'test_compressed.data')).load_bulk(prefix='pre', postfix='post')
-        self.assertEqual(e.exception.args[0], "{} is corrupted or malformed (no file paths start with 'pre' and end with 'post')".format(
-                                              os.path.join('test_dir', 'test_compressed.data')))
+            fast_package_file.PackagedDataFile('test_compressed.data').load_bulk(prefix='pre', postfix='post')
+        self.assertEqual(e.exception.args[0], "test_compressed.data is corrupted or malformed (no file paths start with 'pre' and end with 'post')")
 
         for file_to_delete in ['test_compressed_bad_header.data', 'test_compressed_bad_json.data', 'test_md5_uncompressed_bad_filedata.data', 'test_md5_uncompressed_bad_hash_method.data',
                                'test_uncompressed_bad_cstate.data', 'test_uncompressed_bad_filedata.data', 'test_uncompressed_bad_json.data']:
-            os.remove(os.path.join('test_dir', file_to_delete))
+            os.remove(file_to_delete)
 
 
 # build reference package files
 def build_references():
-    fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), ref_list[0])
-    fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), ref_list[1], compress=False)
-    fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), ref_list[2])
-    fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), ref_list[3], hash_mode='md5', compress=False)
-    fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), ref_list[4])
-    fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), ref_list[5], hash_mode='sha256', compress=False)
+    fast_package_file.build('docs_v1.0_testing', ref_list[0])
+    fast_package_file.build('docs_v1.0_testing', ref_list[1], compress=False)
+    fast_package_file.build('docs_v1.0_testing', ref_list[2])
+    fast_package_file.build('docs_v1.0_testing', ref_list[3], hash_mode='md5', compress=False)
+    fast_package_file.build('docs_v1.0_testing', ref_list[4])
+    fast_package_file.build('docs_v1.0_testing', ref_list[5], hash_mode='sha256', compress=False)
 
 
-ref_list = [os.path.join('test_dir', 'ref_compressed.data'), os.path.join('test_dir', 'ref_uncompressed.data'), os.path.join('test_dir', 'ref_md5_compressed.data'),
-            os.path.join('test_dir', 'ref_md5_uncompressed.data'), os.path.join('test_dir', 'ref_sha256_compressed.data'), os.path.join('test_dir', 'ref_sha256_uncompressed.data')]
+ref_list = ['ref_compressed.data', 'ref_uncompressed.data', 'ref_md5_compressed.data', 'ref_md5_uncompressed.data', 'ref_sha256_compressed.data', 'ref_sha256_uncompressed.data']
 test_list = [ref.replace('ref', 'test') for ref in ref_list]
 
 
