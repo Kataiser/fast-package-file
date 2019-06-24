@@ -145,7 +145,7 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
     if gztemps_deleted != 0:
         print("    Deleted {} .gztemp files".format(gztemps_deleted))
 
-    files_in.sort(key=str.lower)
+    files_in.sort()
 
     if tqdm:
         input_iterable = tqdm.tqdm(files_in, file=sys.stdout, ncols=40, unit=' files', bar_format='    {l_bar}{bar}|', disable=not progress_bar)
@@ -195,7 +195,7 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
                 hasher.update(input_file_data_raw)
                 loc_data_save[file_path_out].append('sha256{}'.format(hasher.hexdigest()))
 
-    loc_data_save_json = json.dumps(loc_data_save, separators=(',', ':')).encode('utf-8')  # convert header to binary
+    loc_data_save_json = json.dumps(loc_data_save, separators=(',', ':'), sort_keys=True).encode('utf-8')  # convert header to binary
     loc_data_save_out = _gzip_compress_fix(loc_data_save_json) if compress else loc_data_save_json  # and compress it
     loc_data_save_length = (len(loc_data_save_out)).to_bytes(8, byteorder='little')  # get its length as an 8 bit binary
 
