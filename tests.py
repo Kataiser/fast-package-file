@@ -7,6 +7,10 @@ import fast_package_file
 class TestTF2RichPresenseFunctions(unittest.TestCase):
     # tests building packages against the reference builds
     def test_build(self):
+        if [ref for ref in ref_list if not os.path.exists(ref)]:
+            # build references only if needed
+            build_references()
+
         fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), test_list[0])
         fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), test_list[1], compress=False)
         fast_package_file.build(os.path.join('test_dir', 'docs_v1.0_testing'), test_list[2])
