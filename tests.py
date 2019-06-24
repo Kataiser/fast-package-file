@@ -196,7 +196,7 @@ def build_references():
     fast_package_file.build('docs_v1.0_testing', ref_list[5], hash_mode='sha256', compress=False)
 
 
-ref_list = ['ref_compressed.data', 'ref_uncompressed.data', 'ref_md5_compressed.data', 'ref_md5_uncompressed.data', 'ref_sha256_compressed.data', 'ref_sha256_uncompressed.data']
+ref_list = ['ref_uncompressed.data', 'ref_compressed.data', 'ref_md5_uncompressed.data', 'ref_md5_compressed.data', 'ref_sha256_uncompressed.data', 'ref_sha256_compressed.data']
 test_list = [ref.replace('ref', 'test') for ref in ref_list]
 
 
