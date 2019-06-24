@@ -53,6 +53,8 @@ class PackagedDataFile:
             self.__loc_data = json.loads(loc_data_bin)  # and parse
         except json.decoder.JSONDecodeError:
             raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path))
+        except UnicodeDecodeError as utf8_error:
+            raise PackageDataError("{} is corrupted or malformed ({})".format(self.__data_file_path, utf8_error))
 
     # load an individual file from the build
     def load_file(self, file: str) -> bytes:
