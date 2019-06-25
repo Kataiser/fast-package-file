@@ -153,45 +153,46 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
     for file_path in input_iterable:
         with open(file_path, 'rb') as input_file:
             input_file_data_raw = input_file.read()
-            total_data_in += len(input_file_data_raw)
-            is_compressed = [c_format for c_format in compressed_formats if file_path.endswith(c_format)]  # check file extension
 
-            if compress and not is_compressed:
-                input_file_data_gzip = _gzip_compress_fix(input_file_data_raw)
+        total_data_in += len(input_file_data_raw)
+        is_compressed = [c_format for c_format in compressed_formats if file_path.endswith(c_format)]  # check file extension
 
-                if len(input_file_data_gzip) < len(input_file_data_raw) * keep_gzip_threshold:  # if compression improves file size
-                    input_file_data = input_file_data_gzip
-                    compressed = True
-                    gz_path = '{}.gztemp'.format(file_path)  # because storing every file's data takes too much memory
-                    files_to_add.append(gz_path)
+        if compress and not is_compressed:
+            input_file_data_gzip = _gzip_compress_fix(input_file_data_raw)
 
-                    with open(gz_path, 'wb') as temp_gz:
-                        temp_gz.write(input_file_data)
-                else:
-                    # if compression doesn't improve file size (much)
-                    input_file_data = input_file_data_raw
-                    compressed = False
-                    files_to_add.append(file_path)
+            if len(input_file_data_gzip) < len(input_file_data_raw) * keep_gzip_threshold:  # if compression improves file size
+                input_file_data = input_file_data_gzip
+                compressed = True
+                gz_path = '{}.gztemp'.format(file_path)  # because storing every file's data takes too much memory
+                files_to_add.append(gz_path)
+
+                with open(gz_path, 'wb') as temp_gz:
+                    temp_gz.write(input_file_data)
             else:
-                # skipping gzip testing because file is likely already compressed based on extension
+                # if compression doesn't improve file size (much)
                 input_file_data = input_file_data_raw
                 compressed = False
                 files_to_add.append(file_path)
+        else:
+            # skipping gzip testing because file is likely already compressed based on extension
+            input_file_data = input_file_data_raw
+            compressed = False
+            files_to_add.append(file_path)
 
-            file_path_short = file_path[len(directory) + len(os.sep):]  # removes some redundancy
-            file_path_out = file_path_short.replace(os.sep, '\\')  # makes building uniform across OSs
-            loc_data_save[file_path_out] = [current_loc, len(input_file_data), 1 if compressed else 0, input_file_data[0], input_file_data[-1]]  # add file to header dictionary
-            current_loc += len(input_file_data)  # keep track of offset
+        file_path_short = file_path[len(directory) + len(os.sep):]  # removes some redundancy
+        file_path_out = file_path_short.replace(os.sep, '\\')  # makes building uniform across OSs
+        loc_data_save[file_path_out] = [current_loc, len(input_file_data), 1 if compressed else 0, input_file_data[0], input_file_data[-1]]  # add file to header dictionary
+        current_loc += len(input_file_data)  # keep track of offset
 
-            # calculate and add hash, if enabled
-            if hash_mode == 'md5':
-                hasher = hashlib.md5()
-                hasher.update(input_file_data_raw)
-                loc_data_save[file_path_out].append('md5   {}'.format(hasher.hexdigest()))
-            elif hash_mode == 'sha256':
-                hasher = hashlib.sha256()
-                hasher.update(input_file_data_raw)
-                loc_data_save[file_path_out].append('sha256{}'.format(hasher.hexdigest()))
+        # calculate and add hash, if enabled
+        if hash_mode == 'md5':
+            hasher = hashlib.md5()
+            hasher.update(input_file_data_raw)
+            loc_data_save[file_path_out].append('md5   {}'.format(hasher.hexdigest()))
+        elif hash_mode == 'sha256':
+            hasher = hashlib.sha256()
+            hasher.update(input_file_data_raw)
+            loc_data_save[file_path_out].append('sha256{}'.format(hasher.hexdigest()))
 
     loc_data_save_json = json.dumps(loc_data_save, separators=(',', ':'), sort_keys=True).encode('utf-8')  # convert header to binary
     loc_data_save_out = _gzip_compress_fix(loc_data_save_json) if compress else loc_data_save_json  # and compress it
