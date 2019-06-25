@@ -16,12 +16,12 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             # build references only if needed
             build_references()
 
-        fast_package_file.build('docs_v1.0_testing', test_list[0])
-        fast_package_file.build('docs_v1.0_testing', test_list[1], compress=False)
-        fast_package_file.build('docs_v1.0_testing', test_list[2])
-        fast_package_file.build('docs_v1.0_testing', test_list[3], hash_mode='md5', compress=False)
-        fast_package_file.build('docs_v1.0_testing', test_list[4])
-        fast_package_file.build('docs_v1.0_testing', test_list[5], hash_mode='sha256', compress=False)
+        fast_package_file.build('docs_v1.0_testing', test_list[0], compress=False)
+        fast_package_file.build('docs_v1.0_testing', test_list[1])
+        fast_package_file.build('docs_v1.0_testing', test_list[2], hash_mode='md5', compress=False)
+        fast_package_file.build('docs_v1.0_testing', test_list[3], hash_mode='md5')
+        fast_package_file.build('docs_v1.0_testing', test_list[4], hash_mode='sha256', compress=False)
+        fast_package_file.build('docs_v1.0_testing', test_list[5], hash_mode='sha256')
 
         file_data = {}
         for file in ref_list + test_list:
@@ -29,11 +29,13 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
                 file_data[file] = file_opened.read()
 
         for ref in ref_list:
+            test_name = ref.replace('ref', 'test')
+
             try:
-                self.assertEqual(file_data[ref.replace('ref', 'test')], file_data[ref])
+                self.assertEqual(file_data[test_name], file_data[ref])
             except AssertionError:
-                print(base64.b64encode(file_data[ref.replace('ref', 'test')]))
-                print(base64.b64encode(file_data[ref]))
+                print(test_name, base64.b64encode(file_data[test_name]))
+                print(ref, base64.b64encode(file_data[ref]))
                 raise
 
     # test loading the file location data
@@ -114,8 +116,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
                     test_compressed_bad_header.write(test_compressed_data_read[120:])
 
             fast_package_file.PackagedDataFile('test_compressed_bad_json.data')
-        self.assertEqual(e.exception.args[0], "test_compressed_bad_json.data is corrupted or malformed "
-                                              "(couldn't decompress header: Error -3 while decompressing data: invalid distance too far back)")
+        self.assertEqual(e.exception.args[0], "test_compressed_bad_json.data is corrupted or malformed ('utf-8' codec can't decode byte 0x8b in position 1: invalid start byte)")
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
             with open('test_uncompressed.data', 'rb') as test_uncompressed_data:
@@ -130,7 +131,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
         try:
             self.assertEqual(e.exception.args[0], "test_uncompressed_bad_json.data is corrupted or malformed (couldn't decode JSON)")
         except AssertionError:
-            self.assertEqual(e.exception.args[0], "test_uncompressed_bad_json.data is corrupted or malformed ('utf-8' codec can't decode byte 0x80 in position 1501: invalid start byte)")
+            self.assertTrue(e.exception.args[0].startswith("test_uncompressed_bad_json.data is corrupted or malformed ('utf-8' codec can't decode byte "))
 
         # for PackagedDataFile.load_file()
         with self.assertRaises(fast_package_file.PackageDataError) as e:
@@ -188,12 +189,12 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
 
 # build reference package files
 def build_references():
-    fast_package_file.build('docs_v1.0_testing', ref_list[0])
-    fast_package_file.build('docs_v1.0_testing', ref_list[1], compress=False)
-    fast_package_file.build('docs_v1.0_testing', ref_list[2])
-    fast_package_file.build('docs_v1.0_testing', ref_list[3], hash_mode='md5', compress=False)
-    fast_package_file.build('docs_v1.0_testing', ref_list[4])
-    fast_package_file.build('docs_v1.0_testing', ref_list[5], hash_mode='sha256', compress=False)
+    fast_package_file.build('docs_v1.0_testing', ref_list[0], compress=False)
+    fast_package_file.build('docs_v1.0_testing', ref_list[1])
+    fast_package_file.build('docs_v1.0_testing', ref_list[2], hash_mode='md5', compress=False)
+    fast_package_file.build('docs_v1.0_testing', ref_list[3], hash_mode='md5')
+    fast_package_file.build('docs_v1.0_testing', ref_list[4], hash_mode='sha256', compress=False)
+    fast_package_file.build('docs_v1.0_testing', ref_list[5], hash_mode='sha256')
 
 
 ref_list = ['ref_uncompressed.data', 'ref_compressed.data', 'ref_md5_uncompressed.data', 'ref_md5_compressed.data', 'ref_sha256_uncompressed.data', 'ref_sha256_compressed.data']
