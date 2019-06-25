@@ -44,10 +44,8 @@ class PackagedDataFile:
 
         try:
             loc_data_bin = gzip.decompress(loc_data_raw)  # decompress
-        except OSError:
+        except (OSError, zlib.error):
             loc_data_bin = loc_data_raw
-        except zlib.error as e:
-            raise PackageDataError("{} is corrupted or malformed (couldn't decompress header: {})".format(self.__data_file_path, e))
 
         try:
             self.__loc_data = json.loads(loc_data_bin)  # and parse
