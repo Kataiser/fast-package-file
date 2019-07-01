@@ -16,7 +16,7 @@ import os
 import sys
 import time
 import zlib
-from typing import List
+from typing import List, Union, Tuple
 
 try:
     import tqdm  # a neat progress bar
@@ -117,7 +117,7 @@ class PackageDataError(Exception):
 
 
 # build a directory and all subdirectories into a single file (this part isn't fast tbh)
-def build(directory: str, target: str, compress: bool = True, keep_gzip_threshold: float = 0.98, progress_bar: bool = True, hash_mode=None):
+def build(directory: str, target: str, compress: bool = True, keep_gzip_threshold: float = 0.98, hash_mode: Union[str, None] = None, progress_bar: bool = True, silent: bool = False):
     print(directory)
 
     start_time = time.perf_counter()
@@ -140,12 +140,12 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
             else:
                 files_in.append(filename_in_joined)
 
-    if gztemps_deleted != 0:
+    if gztemps_deleted != 0 and not silent:
         print("    Deleted {} .gztemp files".format(gztemps_deleted))
 
     files_in.sort()
 
-    if tqdm:
+    if tqdm and not silent:
         input_iterable = tqdm.tqdm(files_in, file=sys.stdout, ncols=40, unit=' files', bar_format='    {l_bar}{bar}|', disable=not progress_bar)
     else:
         input_iterable = files_in
@@ -209,11 +209,12 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
             if file_to_add_path.endswith('.gztemp'):  # and then delete the .gztemp
                 os.remove(file_to_add_path)
 
-    # monitoring output
-    duration = format(time.perf_counter() - start_time, '.2f')
-    input_size = format(total_data_in / 1048576, '.2f')
-    target_size = format(os.stat(target).st_size / 1048576, '.2f')
-    print("    {} ({} MB, {} files) -> {} ({} MB) took {} seconds".format(directory, input_size, len(files_in), target, target_size, duration))
+    if not silent:
+        # monitoring output
+        duration = format(time.perf_counter() - start_time, '.2f')
+        input_size = format(total_data_in / 1048576, '.2f')
+        target_size = format(os.stat(target).st_size / 1048576, '.2f')
+        print("    {} ({} MB, {} files) -> {} ({} MB) took {} seconds".format(directory, input_size, len(files_in), target, target_size, duration))
 
 
 # basically gzip.compress(), but deterministic (mtime=0)
