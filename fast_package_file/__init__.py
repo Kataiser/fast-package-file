@@ -25,37 +25,42 @@ except ImportError:
 
 
 class PackagedDataFile:
-    def __init__(self, data_file_path: str):
-        # load and parse file locations (indices?) header in init in order to not do so each time a file is loaded
+    # load and parse file locations (indices?) header in init in order to not do so each time a file is loaded (if prepare == True)
+    def __init__(self, data_file_path: str, prepare: bool = True):
         self.__data_file_path = data_file_path
+        self.__prepared = prepare
 
-        if not os.path.exists(self.__data_file_path):  # check if file exists
-            raise PackageDataError("'{}' doesn't seem to exist".format(self.__data_file_path))
+        if prepare:
+            if not os.path.exists(self.__data_file_path):  # check if file exists
+                raise PackageDataError("'{}' doesn't seem to exist".format(self.__data_file_path))
 
-        if not os.access(self.__data_file_path, os.R_OK):  # check file permissions
-            raise PackageDataError("Don't have read permissions for '{}'".format(self.__data_file_path))
+            if not os.access(self.__data_file_path, os.R_OK):  # check file permissions
+                raise PackageDataError("Don't have read permissions for '{}'".format(self.__data_file_path))
 
-        with open(self.__data_file_path, 'rb') as data_file_init:
-            self.__loc_data_length = int.from_bytes(data_file_init.read(8), byteorder='little')  # read header length
-            if self.__loc_data_length < 0 or self.__loc_data_length > 1000000000000:  # 1 TB seems to be a reasonable limit
-                raise PackageDataError("{} is corrupted or malformed (header length is {})".format(self.__data_file_path, self.__loc_data_length))
+            with open(self.__data_file_path, 'rb') as data_file_init:
+                self.__loc_data_length = int.from_bytes(data_file_init.read(8), byteorder='little')  # read header length
+                if self.__loc_data_length < 0 or self.__loc_data_length > 1000000000000:  # 1 TB seems to be a reasonable limit
+                    raise PackageDataError("{} is corrupted or malformed (header length is {})".format(self.__data_file_path, self.__loc_data_length))
 
-            loc_data_raw = data_file_init.read(self.__loc_data_length)  # read the compressed header
+                loc_data_raw = data_file_init.read(self.__loc_data_length)  # read the compressed header
 
-        try:
-            loc_data_bin = gzip.decompress(loc_data_raw)  # decompress
-        except (OSError, zlib.error):
-            loc_data_bin = loc_data_raw
+            try:
+                loc_data_bin = gzip.decompress(loc_data_raw)  # decompress
+            except (OSError, zlib.error):
+                loc_data_bin = loc_data_raw
 
-        try:
-            self.file_data = json.loads(loc_data_bin)  # and parse
-        except json.decoder.JSONDecodeError:
-            raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path))
-        except UnicodeDecodeError as utf8_error:
-            raise PackageDataError("{} is corrupted or malformed ({})".format(self.__data_file_path, utf8_error))
+            try:
+                self.file_data = json.loads(loc_data_bin)  # and parse
+            except json.decoder.JSONDecodeError:
+                raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path))
+            except UnicodeDecodeError as utf8_error:
+                raise PackageDataError("{} is corrupted or malformed ({})".format(self.__data_file_path, utf8_error))
 
     # load an individual file from the build
     def load_file(self, file: str) -> bytes:
+        if not self.__prepared:
+            self.__init__(self.__data_file_path, prepare=True)
+
         try:
             file_loc_data = self.file_data[file]  # get the file's stats: (offset, length, compressed (1 or 0), first byte, last byte)
         except KeyError:

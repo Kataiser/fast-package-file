@@ -58,6 +58,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
 
         for test_file in test_list:
             test_file_loaded = fast_package_file.PackagedDataFile(test_file)
+            test_file_unprepared = fast_package_file.PackagedDataFile(test_file, prepare=False)
 
             with open(os.path.join('docs_v1.0_testing', 'index.rst'), 'rb') as dist_file_ref:
                 dist_file_ref_data = dist_file_ref.read()
@@ -67,7 +68,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             with open(os.path.join('docs_v1.0_testing', '_build', 'html', 'index.html'), 'rb') as dist_file_ref:
                 dist_file_ref_data = dist_file_ref.read()
 
-                self.assertEqual(test_file_loaded.load_file(r'_build\html\index.html'), dist_file_ref_data)
+                self.assertEqual(test_file_unprepared.load_file(r'_build\html\index.html'), dist_file_ref_data)
 
     # test loading a directory
     def test_load_bulk(self):
