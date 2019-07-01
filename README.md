@@ -1,7 +1,8 @@
 [![PyPI](https://img.shields.io/pypi/v/fast-package-file.svg)](https://pypi.org/project/fast-package-file/)
 [![Build Status](https://travis-ci.com/Kataiser/fast-package-file.svg?branch=master)](https://travis-ci.com/Kataiser/fast-package-file)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5018ac2a202145eca3d0ede57904815e)](https://app.codacy.com/app/Kataiser/fast-package-file?utm_source=github.com&utm_medium=referral&utm_content=Kataiser/fast-package-file&utm_campaign=Badge_Grade_Dashboard)
 [![Documentation Status](https://readthedocs.org/projects/fast-package-file/badge/?version=latest)](https://fast-package-file.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/Kataiser/fast-package-file/branch/master/graph/badge.svg)](https://codecov.io/gh/Kataiser/fast-package-file)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5018ac2a202145eca3d0ede57904815e)](https://app.codacy.com/app/Kataiser/fast-package-file?utm_source=github.com&utm_medium=referral&utm_content=Kataiser/fast-package-file&utm_campaign=Badge_Grade_Dashboard)
 
 # fast_package_file
 Package a directory to a file, with fast file access and compression support
