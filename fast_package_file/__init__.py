@@ -48,7 +48,7 @@ class PackagedDataFile:
             loc_data_bin = loc_data_raw
 
         try:
-            self.__loc_data = json.loads(loc_data_bin)  # and parse
+            self.file_data = json.loads(loc_data_bin)  # and parse
         except json.decoder.JSONDecodeError:
             raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path))
         except UnicodeDecodeError as utf8_error:
@@ -57,7 +57,7 @@ class PackagedDataFile:
     # load an individual file from the build
     def load_file(self, file: str) -> bytes:
         try:
-            file_loc_data = self.__loc_data[file]  # get the file's stats: (offset, length, compressed (1 or 0), first byte, last byte)
+            file_loc_data = self.file_data[file]  # get the file's stats: (offset, length, compressed (1 or 0), first byte, last byte)
         except KeyError:
             raise PackageDataError("{} is corrupted or malformed (file '{}' doesn't exist in location header)".format(self.__data_file_path, file))
 
@@ -98,7 +98,7 @@ class PackagedDataFile:
     def load_bulk(self, prefix: str = '', postfix: str = '') -> List[bytes]:
         out_data = []
 
-        for file_in_package in self.__loc_data.keys():
+        for file_in_package in self.file_data.keys():
             if file_in_package.startswith(prefix) and file_in_package.endswith(postfix):
                 out_data.append(self.load_file(file_in_package))
 
@@ -108,7 +108,7 @@ class PackagedDataFile:
             raise PackageDataError("{} is corrupted or malformed (no file paths start with '{}' and end with '{}')".format(self.__data_file_path, prefix, postfix))
 
     def __repr__(self):
-        return "<fast_package_file.PackagedDataFile object for {} ({} files, {} bytes)>".format(self.__data_file_path, len(self.__loc_data), os.stat(self.__data_file_path).st_size)
+        return "<fast_package_file.PackagedDataFile object for {} ({} files, {} bytes)>".format(self.__data_file_path, len(self.file_data), os.stat(self.__data_file_path).st_size)
 
 
 # only used when reading packages
