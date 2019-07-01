@@ -111,6 +111,20 @@ class PackagedDataFile:
         return "<fast_package_file.PackagedDataFile object for {} ({} files, {} bytes)>".format(self.__data_file_path, len(self.file_data), os.stat(self.__data_file_path).st_size)
 
 
+# prepare a package file and load a file from it
+def oneshot(data_file_path: str, file: str) -> bytes:
+    oneshot_package = PackagedDataFile(data_file_path)
+    oneshot_file = oneshot_package.load_file(file)
+    return oneshot_file
+
+
+# prepare a package file and load multiple files from it
+def oneshot_bulk(data_file_path: str, prefix: str = '', postfix: str = '') -> List[bytes]:
+    oneshot_package = PackagedDataFile(data_file_path)
+    oneshot_list = oneshot_package.load_bulk(prefix, postfix)
+    return oneshot_list
+
+
 # only used when reading packages
 class PackageDataError(Exception):
     pass
