@@ -16,7 +16,7 @@ import os
 import sys
 import time
 import zlib
-from typing import List, Union, Tuple
+from typing import List, Union
 
 try:
     import tqdm  # a neat progress bar
