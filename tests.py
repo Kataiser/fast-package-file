@@ -96,6 +96,21 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\doctrees')[0], environment_pickle_ref)
             self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\html', postfix='.html')[0], genindex_html_ref)
 
+    # test oneshot() and oneshot_bulk()
+    def test_oneshots(self):
+        if [test_file for test_file in test_list if not os.path.exists(test_file)]:
+            # if running test individually
+            self.test_build()
+
+        with open(os.path.join('docs_v1.0_testing', '_build', 'doctrees', 'environment.pickle'), 'rb') as environment_pickle:
+            environment_pickle_ref = environment_pickle.read()
+        with open(os.path.join('docs_v1.0_testing', '_build', 'html', 'genindex.html'), 'rb') as genindex_html:
+            genindex_html_ref = genindex_html.read()
+
+        for test_file in test_list:
+            self.assertEqual(fast_package_file.oneshot(test_file, r'_build\doctrees\environment.pickle'), environment_pickle_ref)
+            self.assertEqual(fast_package_file.oneshot_bulk(test_file, prefix=r'_build\html', postfix='.html')[0], genindex_html_ref)
+
     # test a variety of possible loading errors
     def test_errors(self):
         if [test_file for test_file in test_list if not os.path.exists(test_file)]:
