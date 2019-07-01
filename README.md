@@ -30,32 +30,26 @@ fast_package_file.oneshot('a_package.file', 'path\\to\\any.file')
 fast_package_file.oneshot_bulk('a_package.file', prefix='audio\\sfx\\', postfix='.wav')
 ```
 
-Installation
-------------
-	pip install fast-package-file
+## Installation
+```
+pip install fast-package-file
+```
 
-Documentation
--------------
+## Documentation
 More details will be available at https://fast-package-file.readthedocs.io/en/latest/
 
-Features
---------
+## Features
+-   Is fast because only the data needed is loaded from the package file, total package size is irrelevant
+-   Obfuscates files from (most) users
+-   Like a .zip file, but doesn't decompress the entire thing when reading just one file
+-   Includes the entire directory and subdirectories, not just surface-level files
+-   Files are compressed with Gzip, but only if compression improves file size (per file) and is enabled (per package file)
+-   Pretty good error handling when loading package files, just catch fast_package_file.PackageDataError
+-   Inspired by video game packaging, such as UE4's .pak or GTA V's .rpf formats
 
-- Is fast because only the data needed is loaded from the package file, total package size is irrelevant
-- Obfuscates files from (most) users
-- Like a .zip file, but doesn't decompress the entire thing when reading just one file
-- Includes the entire directory and subdirectories, not just surface-level files
-- Files are compressed with Gzip, but only if compression improves file size (per file) and is enabled (per package file)
-- Pretty good error handling when loading package files, just catch fast_package_file.PackageDataError
-- Inspired by video game packaging, such as UE4's .pak or GTA V's .rpf formats
+## Contribute
+-   Issue Tracker: https://github.com/Kataiser/fast-package-file/issues
+-   Source Code: https://github.com/Kataiser/fast-package-file
 
-Contribute
-----------
-
-- Issue Tracker: https://github.com/Kataiser/fast-package-file/issues
-- Source Code: https://github.com/Kataiser/fast-package-file
-
-License
--------
-
+## License
 The project is licensed under the MIT license.
