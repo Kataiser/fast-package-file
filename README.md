@@ -31,7 +31,7 @@ fast_package_file.oneshot_bulk('a_package.file', prefix='audio\\sfx\\', postfix=
 ```
 
 ## Installation
-```
+```shell
 pip install fast-package-file
 ```
 
