@@ -1,5 +1,7 @@
-[![Documentation Status](https://readthedocs.org/projects/fast-package-file/badge/?version=latest)](https://fast-package-file.readthedocs.io/en/latest/?badge=latest)
 [![PyPI](https://img.shields.io/pypi/v/fast-package-file.svg)](https://pypi.org/project/fast-package-file/)
+[![Build Status](https://travis-ci.com/Kataiser/fast-package-file.svg?branch=master)](https://travis-ci.com/Kataiser/fast-package-file)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5018ac2a202145eca3d0ede57904815e)](https://app.codacy.com/app/Kataiser/fast-package-file?utm_source=github.com&utm_medium=referral&utm_content=Kataiser/fast-package-file&utm_campaign=Badge_Grade_Dashboard)
+[![Documentation Status](https://readthedocs.org/projects/fast-package-file/badge/?version=latest)](https://fast-package-file.readthedocs.io/en/latest/?badge=latest)
 
 # fast_package_file
 Package a directory to a file, with fast file access and compression support
@@ -15,11 +17,16 @@ data_package = fast_package_file.PackagedDataFile('a_package.file')
 
 # Load a file from the packed directory and save it
 with open('any.file', 'wb') as any_file:
-  data_package.load(r'path\to\any.file')
+  data_package.load_file('path\\to\\any.file')
 
 # Or just get the raw binary data
 from PIL import Image
-i = Image.open(io.BytesIO(data_package.load('image.png')))
+i = Image.open(io.BytesIO(data_package.load_file('image.png')))
+
+# Some other useful functions
+data_package.load_bulk(prefix='audio\\sfx\\', postfix='.wav')
+fast_package_file.oneshot('a_package.file', 'path\\to\\any.file')
+fast_package_file.oneshot_bulk('a_package.file', prefix='audio\\sfx\\', postfix='.wav')
 ```
 
 Installation
