@@ -12,6 +12,16 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
 
     # tests building packages against the reference builds
     def test_build(self):
+        # normalize line endings
+        for root, dirs, files in os.walk('test_dir'):
+            for test_dir_file in files:
+                test_dir_filepath = os.path.join(root, test_dir_file)
+
+                with open(test_dir_filepath, 'rb') as file_in:
+                    file_in_read = file_in.read().replace(b'\r\n', b'\n')
+                with open(test_dir_filepath, 'wb') as file_out:
+                    file_out.write(file_in_read)
+
         if [ref for ref in ref_list if not os.path.exists(ref)]:
             # build references only if needed
             build_references()
