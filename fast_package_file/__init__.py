@@ -16,7 +16,7 @@ import os
 import sys
 import time
 import zlib
-from typing import List, Union
+from typing import List, Union, Callable
 
 try:
     import tqdm  # a neat progress bar
@@ -57,7 +57,7 @@ class PackagedDataFile:
                 raise PackageDataError("{} is corrupted or malformed ({})".format(self.__data_file_path, utf8_error))
 
     # load an individual file from the build
-    def load_file(self, file: str) -> bytes:
+    def load_file(self, file: str, decomp_func: Callable[[bytes], bytes] = None) -> bytes:
         if not self.__prepared:
             self.__init__(self.__data_file_path, prepare=True)
 
@@ -71,7 +71,13 @@ class PackagedDataFile:
             data_file_raw = data_file.read(file_loc_data[1])
 
         if file_loc_data[2] == 1:  # is compressed
-            data_file_out = gzip.decompress(data_file_raw)
+            try:
+                if decomp_func:
+                    data_file_out = decomp_func(data_file_raw)
+                else:
+                    data_file_out = gzip.decompress(data_file_raw)
+            except Exception as error:
+                raise PackageDataError("{} is corrupted or malformed (decompression error for {}: '{}')".format(self.__data_file_path, file, error))
         elif file_loc_data[2] == 0:
             data_file_out = data_file_raw
         else:
@@ -100,12 +106,12 @@ class PackagedDataFile:
         return data_file_out
 
     # load multiple files at once (most likely a subdirectory)
-    def load_bulk(self, prefix: str = '', postfix: str = '') -> List[bytes]:
+    def load_bulk(self, prefix: str = '', postfix: str = '', decomp_func: Callable[[bytes], bytes] = None) -> List[bytes]:
         out_data = []
 
         for file_in_package in self.file_data.keys():
             if file_in_package.startswith(prefix) and file_in_package.endswith(postfix):
-                out_data.append(self.load_file(file_in_package))
+                out_data.append(self.load_file(file_in_package, decomp_func))
 
         if out_data:
             return out_data
@@ -117,16 +123,16 @@ class PackagedDataFile:
 
 
 # prepare a package file and load a file from it
-def oneshot(data_file_path: str, file: str) -> bytes:
+def oneshot(data_file_path: str, file: str, decomp_func: Callable[[bytes], bytes] = None) -> bytes:
     oneshot_package = PackagedDataFile(data_file_path)
-    oneshot_file = oneshot_package.load_file(file)
+    oneshot_file = oneshot_package.load_file(file, decomp_func)
     return oneshot_file
 
 
 # prepare a package file and load multiple files from it
-def oneshot_bulk(data_file_path: str, prefix: str = '', postfix: str = '') -> List[bytes]:
+def oneshot_bulk(data_file_path: str, prefix: str = '', postfix: str = '', decomp_func: Callable[[bytes], bytes] = None) -> List[bytes]:
     oneshot_package = PackagedDataFile(data_file_path)
-    oneshot_list = oneshot_package.load_bulk(prefix, postfix)
+    oneshot_list = oneshot_package.load_bulk(prefix, postfix, decomp_func)
     return oneshot_list
 
 
@@ -136,7 +142,8 @@ class PackageDataError(Exception):
 
 
 # build a directory and all subdirectories into a single file (this part isn't fast tbh)
-def build(directory: str, target: str, compress: bool = True, keep_gzip_threshold: float = 0.98, hash_mode: Union[str, None] = None, progress_bar: bool = True, silent: bool = False):
+def build(directory: str, target: str, compress: bool = True, keep_gzip_threshold: float = 0.98, hash_mode: Union[str, None] = None, comp_func: Callable[[bytes], bytes] = None,
+          progress_bar: bool = True, silent: bool = False):
     print(directory)
 
     start_time = time.perf_counter()
@@ -177,10 +184,13 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
         is_compressed = [c_format for c_format in compressed_formats if file_path.endswith(c_format)]  # check file extension
 
         if compress and not is_compressed:
-            input_file_data_gzip = _gzip_compress_fix(input_file_data_raw)
+            if comp_func:
+                input_file_data_comp = comp_func(input_file_data_raw)
+            else:
+                input_file_data_comp = _gzip_compress_fix(input_file_data_raw)
 
-            if len(input_file_data_gzip) < len(input_file_data_raw) * keep_gzip_threshold:  # if compression improves file size
-                input_file_data = input_file_data_gzip
+            if len(input_file_data_comp) < len(input_file_data_raw) * keep_gzip_threshold:  # if compression improves file size
+                input_file_data = input_file_data_comp
                 compressed = True
                 gz_path = '{}.gztemp'.format(file_path)  # because storing every file's data takes too much memory
                 files_to_add.append(gz_path)

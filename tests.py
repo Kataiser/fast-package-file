@@ -1,4 +1,5 @@
 import base64
+import lzma
 import os
 import unittest
 
@@ -22,6 +23,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
         fast_package_file.build('docs_v1.0_testing', test_list[3], hash_mode='md5')
         fast_package_file.build('docs_v1.0_testing', test_list[4], hash_mode='sha256', compress=False)
         fast_package_file.build('docs_v1.0_testing', test_list[5], hash_mode='sha256')
+        fast_package_file.build('docs_v1.0_testing', test_list[6], comp_func=lzma.compress)
 
         file_data = {}
         for file in ref_list + test_list:
@@ -61,14 +63,20 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             test_file_unprepared = fast_package_file.PackagedDataFile(test_file, prepare=False)
 
             with open(os.path.join('docs_v1.0_testing', 'index.rst'), 'rb') as dist_file_ref:
-                dist_file_ref_data = dist_file_ref.read()
-
-                self.assertEqual(test_file_loaded.load_file('index.rst'), dist_file_ref_data)
-
+                dist_file_ref_rst = dist_file_ref.read()
             with open(os.path.join('docs_v1.0_testing', '_build', 'html', 'index.html'), 'rb') as dist_file_ref:
-                dist_file_ref_data = dist_file_ref.read()
+                dist_file_ref_html = dist_file_ref.read()
 
-                self.assertEqual(test_file_unprepared.load_file(r'_build\html\index.html'), dist_file_ref_data)
+            if 'lzma' in test_file:
+                self.assertEqual(test_file_loaded.load_file(r'index.rst', decomp_func=lzma.decompress), dist_file_ref_rst)
+                self.assertEqual(test_file_loaded.load_file(r'_build\html\index.html', decomp_func=lzma.decompress), dist_file_ref_html)
+                self.assertEqual(test_file_unprepared.load_file(r'index.rst', decomp_func=lzma.decompress), dist_file_ref_rst)
+                self.assertEqual(test_file_unprepared.load_file(r'_build\html\index.html', decomp_func=lzma.decompress), dist_file_ref_html)
+            else:
+                self.assertEqual(test_file_loaded.load_file(r'index.rst'), dist_file_ref_rst)
+                self.assertEqual(test_file_loaded.load_file(r'_build\html\index.html'), dist_file_ref_html)
+                self.assertEqual(test_file_unprepared.load_file(r'index.rst'), dist_file_ref_rst)
+                self.assertEqual(test_file_unprepared.load_file(r'_build\html\index.html'), dist_file_ref_html)
 
     # test loading a directory
     def test_load_bulk(self):
@@ -84,8 +92,12 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
         for test_file in test_list:
             test_file_loaded = fast_package_file.PackagedDataFile(test_file)
 
-            self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\doctrees')[0], environment_pickle_ref)
-            self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\html', postfix='.html')[0], genindex_html_ref)
+            if 'lzma' in test_file:
+                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\doctrees', decomp_func=lzma.decompress)[0], environment_pickle_ref)
+                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\html', postfix='.html', decomp_func=lzma.decompress)[0], genindex_html_ref)
+            else:
+                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\doctrees')[0], environment_pickle_ref)
+                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\html', postfix='.html')[0], genindex_html_ref)
 
     # test oneshot() and oneshot_bulk()
     def test_oneshots(self):
@@ -99,8 +111,12 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             genindex_html_ref = genindex_html.read()
 
         for test_file in test_list:
-            self.assertEqual(fast_package_file.oneshot(test_file, r'_build\doctrees\environment.pickle'), environment_pickle_ref)
-            self.assertEqual(fast_package_file.oneshot_bulk(test_file, prefix=r'_build\html', postfix='.html')[0], genindex_html_ref)
+            if 'lzma' in test_file:
+                self.assertEqual(fast_package_file.oneshot(test_file, r'_build\doctrees\environment.pickle', decomp_func=lzma.decompress), environment_pickle_ref)
+                self.assertEqual(fast_package_file.oneshot_bulk(test_file, prefix=r'_build\html', postfix='.html', decomp_func=lzma.decompress)[0], genindex_html_ref)
+            else:
+                self.assertEqual(fast_package_file.oneshot(test_file, r'_build\doctrees\environment.pickle'), environment_pickle_ref)
+                self.assertEqual(fast_package_file.oneshot_bulk(test_file, prefix=r'_build\html', postfix='.html')[0], genindex_html_ref)
 
     # test a variety of possible loading errors
     def test_errors(self):
@@ -213,9 +229,11 @@ def build_references():
     fast_package_file.build('docs_v1.0_testing', ref_list[3], hash_mode='md5')
     fast_package_file.build('docs_v1.0_testing', ref_list[4], hash_mode='sha256', compress=False)
     fast_package_file.build('docs_v1.0_testing', ref_list[5], hash_mode='sha256')
+    fast_package_file.build('docs_v1.0_testing', ref_list[6], comp_func=lzma.compress)
 
 
-ref_list = ['ref_uncompressed.data', 'ref_compressed.data', 'ref_md5_uncompressed.data', 'ref_md5_compressed.data', 'ref_sha256_uncompressed.data', 'ref_sha256_compressed.data']
+ref_list = ['ref_uncompressed.data', 'ref_compressed.data', 'ref_md5_uncompressed.data', 'ref_md5_compressed.data', 'ref_sha256_uncompressed.data', 'ref_sha256_compressed.data',
+            'ref_lzma.data']
 test_list = [ref.replace('ref', 'test') for ref in ref_list]
 
 
