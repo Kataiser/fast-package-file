@@ -51,6 +51,7 @@ More details will be available at https://fast-package-file.readthedocs.io/en/la
 -   Files are compressed with Gzip, but only if compression improves file size (per file) and is enabled (per package file)
 -   Pretty good error handling when loading package files, just catch fast_package_file.PackageDataError
 -   Inspired by video game packaging, such as UE4's .pak or GTA V's .rpf formats
+-   Cross-platform, has CI for Linux, MacOS, and Windows
 
 ## Contribute
 -   Issue Tracker: https://github.com/Kataiser/fast-package-file/issues
