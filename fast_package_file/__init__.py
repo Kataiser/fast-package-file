@@ -16,7 +16,7 @@ import os
 import sys
 import time
 import zlib
-from typing import List, Union, Callable
+from typing import List, Union, Callable, Dict
 
 try:
     import tqdm  # a neat progress bar
@@ -106,12 +106,12 @@ class PackagedDataFile:
         return data_file_out
 
     # load multiple files at once (most likely a subdirectory)
-    def load_bulk(self, prefix: str = '', postfix: str = '', decomp_func: Callable[[bytes], bytes] = None) -> List[bytes]:
-        out_data = []
+    def load_bulk(self, prefix: str = '', postfix: str = '', decomp_func: Callable[[bytes], bytes] = None) -> Dict[str, bytes]:
+        out_data = {}
 
         for file_in_package in self.file_data.keys():
             if file_in_package.startswith(prefix) and file_in_package.endswith(postfix):
-                out_data.append(self.load_file(file_in_package, decomp_func))
+                out_data[file_in_package] = (self.load_file(file_in_package, decomp_func))
 
         if out_data:
             return out_data
@@ -130,7 +130,7 @@ def oneshot(data_file_path: str, file: str, decomp_func: Callable[[bytes], bytes
 
 
 # prepare a package file and load multiple files from it
-def oneshot_bulk(data_file_path: str, prefix: str = '', postfix: str = '', decomp_func: Callable[[bytes], bytes] = None) -> List[bytes]:
+def oneshot_bulk(data_file_path: str, prefix: str = '', postfix: str = '', decomp_func: Callable[[bytes], bytes] = None) -> Dict[str, bytes]:
     oneshot_package = PackagedDataFile(data_file_path)
     oneshot_list = oneshot_package.load_bulk(prefix, postfix, decomp_func)
     return oneshot_list

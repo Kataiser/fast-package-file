@@ -93,11 +93,11 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             test_file_loaded = fast_package_file.PackagedDataFile(test_file)
 
             if 'lzma' in test_file:
-                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\doctrees', decomp_func=lzma.decompress)[0], environment_pickle_ref)
-                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\html', postfix='.html', decomp_func=lzma.decompress)[0], genindex_html_ref)
+                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\doctrees', decomp_func=lzma.decompress)[r'_build\doctrees\environment.pickle'], environment_pickle_ref)
+                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\html', postfix='.html', decomp_func=lzma.decompress)[r'_build\html\genindex.html'], genindex_html_ref)
             else:
-                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\doctrees')[0], environment_pickle_ref)
-                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\html', postfix='.html')[0], genindex_html_ref)
+                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\doctrees')[r'_build\doctrees\environment.pickle'], environment_pickle_ref)
+                self.assertEqual(test_file_loaded.load_bulk(prefix=r'_build\html', postfix='.html')[r'_build\html\genindex.html'], genindex_html_ref)
 
     # test oneshot() and oneshot_bulk()
     def test_oneshots(self):
@@ -113,10 +113,10 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
         for test_file in test_list:
             if 'lzma' in test_file:
                 self.assertEqual(fast_package_file.oneshot(test_file, r'_build\doctrees\environment.pickle', decomp_func=lzma.decompress), environment_pickle_ref)
-                self.assertEqual(fast_package_file.oneshot_bulk(test_file, prefix=r'_build\html', postfix='.html', decomp_func=lzma.decompress)[0], genindex_html_ref)
+                self.assertEqual(fast_package_file.oneshot_bulk(test_file, prefix=r'_build\html', postfix='.html', decomp_func=lzma.decompress)[r'_build\html\genindex.html'], genindex_html_ref)
             else:
                 self.assertEqual(fast_package_file.oneshot(test_file, r'_build\doctrees\environment.pickle'), environment_pickle_ref)
-                self.assertEqual(fast_package_file.oneshot_bulk(test_file, prefix=r'_build\html', postfix='.html')[0], genindex_html_ref)
+                self.assertEqual(fast_package_file.oneshot_bulk(test_file, prefix=r'_build\html', postfix='.html')[r'_build\html\genindex.html'], genindex_html_ref)
 
     # test a variety of possible loading errors
     def test_errors(self):
