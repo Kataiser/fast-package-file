@@ -4,6 +4,9 @@ matrix:
     - name: "Python 3.7.1 on Xenial Linux"
       python: 3.7
       dist: xenial
+    - name: "Python 3.2 on Xenial Linux"
+      python: 3.2
+      dist: xenial
     - name: "Python 3.6 on macOS"
       python: 3.6
       os: osx
