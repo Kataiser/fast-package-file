@@ -31,8 +31,13 @@ fast_package_file.oneshot_bulk('a_package.file', prefix='audio\\sfx\\', postfix=
 ```
 
 ## Installation
+From PyPI:
 ```shell
 pip install fast-package-file
+```
+Or from Github:
+```shell
+pip install git+git://github.com/Kataiser/fast-package-file.git@master#egg=fast_package_file
 ```
 
 ## Documentation
