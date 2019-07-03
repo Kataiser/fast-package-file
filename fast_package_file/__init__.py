@@ -50,7 +50,7 @@ class PackagedDataFile:
                 loc_data_bin = loc_data_raw
 
             try:
-                self.file_data = json.loads(loc_data_bin)  # and parse
+                self.file_data = json.loads(loc_data_bin.decode('utf-8'))  # and parse
             except json.decoder.JSONDecodeError:
                 raise PackageDataError("{} is corrupted or malformed (couldn't decode JSON)".format(self.__data_file_path))
             except UnicodeDecodeError as utf8_error:
