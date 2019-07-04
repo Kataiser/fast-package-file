@@ -1,4 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/fast-package-file.svg)](https://pypi.org/project/fast-package-file/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/fast-package-file.svg)](https://pypi.org/project/fast-package-file/)
 [![Build Status](https://travis-ci.com/Kataiser/fast-package-file.svg?branch=master)](https://travis-ci.com/Kataiser/fast-package-file)
 [![Documentation Status](https://readthedocs.org/projects/fast-package-file/badge/?version=latest)](https://fast-package-file.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/Kataiser/fast-package-file/branch/master/graph/badge.svg)](https://codecov.io/gh/Kataiser/fast-package-file)
