@@ -43,18 +43,28 @@
 
 <span class="c1"># Load a file from the packed directory and save it</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;any.file&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">any_file</span><span class="p">:</span>
-        <span class="n">data_package</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;path\to\any.file&#39;</span><span class="p">)</span>
+        <span class="n">data_package</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s1">&#39;path</span><span class="se">\\</span><span class="s1">to</span><span class="se">\\</span><span class="s1">any.file&#39;</span><span class="p">)</span>
 
 <span class="c1"># Or just get the raw binary data</span>
 <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
-<span class="n">i</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data_package</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;image.png&#39;</span><span class="p">)))</span>
+<span class="n">i</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data_package</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s1">&#39;image.png&#39;</span><span class="p">)))</span>
+
+<span class="c1"># Some other useful functions</span>
+<span class="n">data_package</span><span class="o">.</span><span class="n">load_bulk</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;audio</span><span class="se">\\</span><span class="s1">sfx</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="s1">&#39;.wav&#39;</span><span class="p">)</span>
+<span class="n">fast_package_file</span><span class="o">.</span><span class="n">oneshot</span><span class="p">(</span><span class="s1">&#39;a_package.file&#39;</span><span class="p">,</span> <span class="s1">&#39;path</span><span class="se">\\</span><span class="s1">to</span><span class="se">\\</span><span class="s1">any.file&#39;</span><span class="p">)</span>
+<span class="n">fast_package_file</span><span class="o">.</span><span class="n">oneshot_bulk</span><span class="p">(</span><span class="s1">&#39;a_package.file&#39;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;audio</span><span class="se">\\</span><span class="s1">sfx</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="s1">&#39;.wav&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div><p>pip install fast-package-file</p>
-</div></blockquote>
+<p>From PyPI:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install fast-package-file
+</pre></div>
+</div>
+<p>Or from Github:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install git+git://github.com/Kataiser/fast-package-file.git@master#egg<span class="o">=</span>fast_package_file
+</pre></div>
+</div>
 </div>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
@@ -66,6 +76,7 @@
 <li><p>Files are compressed with Gzip, but only if compression improves file size (per file) and is enabled (per package file)</p></li>
 <li><p>Pretty good error handling when loading package files, just catch fast_package_file.PackageDataError</p></li>
 <li><p>Inspired by video game packaging, such as UE4’s .pak or GTA V’s .rpf formats</p></li>
+<li><p>Cross-platform, has CI for Linux, MacOS, and Windows</p></li>
 </ul>
 </div>
 <div class="section" id="contribute">
