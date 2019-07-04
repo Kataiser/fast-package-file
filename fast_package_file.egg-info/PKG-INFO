@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: fast-package-file
-Version: 1.0
+Version: 1.1
 Summary: Package a directory to a file, with fast file access and compression support
 Home-page: https://github.com/Kataiser/fast-package-file
 Author: Kataiser

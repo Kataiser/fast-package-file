@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fast_package_file",
-    version="1.0",
+    version="1.1",
     author="Kataiser",
     author_email="mecharon1.gm@gmail.com",
     description="Package a directory to a file, with fast file access and compression support",

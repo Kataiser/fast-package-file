@@ -1,10 +1,11 @@
 """fast_package_file
 https://github.com/Kataiser/fast-package-file
 https://fast-package-file.readthedocs.io/en/latest/
+https://pypi.org/project/fast-package-file/
 """
 
 __author__ = "Kataiser (https://github.com/Kataiser)"
-__version__ = "1.0"
+__version__ = "1.1"
 __copyright__ = "Copyright (c) 2019 Kataiser (https://github.com/Kataiser)"
 __license__ = "MIT"
 

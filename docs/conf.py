@@ -20,6 +20,8 @@
 project = 'fast-package-file'
 copyright = '2019, Kataiser'
 author = 'Kataiser'
+version = '1.1'
+release = '1.1'
 
 
 # -- General configuration ---------------------------------------------------
