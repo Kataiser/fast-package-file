@@ -6,7 +6,12 @@ Home-page: https://github.com/Kataiser/fast-package-file
 Author: Kataiser
 Author-email: mecharon1.gm@gmail.com
 License: UNKNOWN
-Description: [![Documentation Status](https://readthedocs.org/projects/fast-package-file/badge/?version=latest)](https://fast-package-file.readthedocs.io/en/latest/?badge=latest)
+Description: [![PyPI](https://img.shields.io/pypi/v/fast-package-file.svg)](https://pypi.org/project/fast-package-file/)
+        [![Build Status](https://travis-ci.com/Kataiser/fast-package-file.svg?branch=master)](https://travis-ci.com/Kataiser/fast-package-file)
+        [![Documentation Status](https://readthedocs.org/projects/fast-package-file/badge/?version=latest)](https://fast-package-file.readthedocs.io/en/latest/?badge=latest)
+        [![codecov](https://codecov.io/gh/Kataiser/fast-package-file/branch/master/graph/badge.svg)](https://codecov.io/gh/Kataiser/fast-package-file)
+        [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5018ac2a202145eca3d0ede57904815e)](https://app.codacy.com/app/Kataiser/fast-package-file?utm_source=github.com&utm_medium=referral&utm_content=Kataiser/fast-package-file&utm_campaign=Badge_Grade_Dashboard)
+        
         # fast_package_file
         Package a directory to a file, with fast file access and compression support
         
@@ -21,41 +26,46 @@ Description: [![Documentation Status](https://readthedocs.org/projects/fast-pack
         
         # Load a file from the packed directory and save it
         with open('any.file', 'wb') as any_file:
-          data_package.load(r'path\to\any.file')
+          data_package.load_file('path\\to\\any.file')
         
         # Or just get the raw binary data
         from PIL import Image
-        i = Image.open(io.BytesIO(data_package.load('image.png')))
+        i = Image.open(io.BytesIO(data_package.load_file('image.png')))
+        
+        # Some other useful functions
+        data_package.load_bulk(prefix='audio\\sfx\\', postfix='.wav')
+        fast_package_file.oneshot('a_package.file', 'path\\to\\any.file')
+        fast_package_file.oneshot_bulk('a_package.file', prefix='audio\\sfx\\', postfix='.wav')
         ```
         
-        Installation
-        ------------
-        	pip install fast-package-file
+        ## Installation
+        From PyPI:
+        ```shell
+        pip install fast-package-file
+        ```
+        Or from Github:
+        ```shell
+        pip install git+git://github.com/Kataiser/fast-package-file.git@master#egg=fast_package_file
+        ```
         
-        Documentation
-        -------------
+        ## Documentation
         More details will be available at https://fast-package-file.readthedocs.io/en/latest/
         
-        Features
-        --------
+        ## Features
+        -   Is fast because only the data needed is loaded from the package file, total package size is irrelevant
+        -   Obfuscates files from (most) users
+        -   Like a .zip file, but doesn't decompress the entire thing when reading just one file
+        -   Includes the entire directory and subdirectories, not just surface-level files
+        -   Files are compressed with Gzip, but only if compression improves file size (per file) and is enabled (per package file)
+        -   Pretty good error handling when loading package files, just catch fast_package_file.PackageDataError
+        -   Inspired by video game packaging, such as UE4's .pak or GTA V's .rpf formats
+        -   Cross-platform, has CI for Linux, MacOS, and Windows
         
-        - Is fast because only the data needed is loaded from the package file, total package size is irrelevant
-        - Obfuscates files from (most) users
-        - Like a .zip file, but doesn't decompress the entire thing when reading just one file
-        - Includes the entire directory and subdirectories, not just surface-level files
-        - Files are compressed with Gzip, but only if compression improves file size (per file) and is enabled (per package file)
-        - Pretty good error handling when loading package files, just catch fast_package_file.PackageDataError
-        - Inspired by video game packaging, such as UE4's .pak or GTA V's .rpf formats
+        ## Contribute
+        -   Issue Tracker: https://github.com/Kataiser/fast-package-file/issues
+        -   Source Code: https://github.com/Kataiser/fast-package-file
         
-        Contribute
-        ----------
-        
-        - Issue Tracker: https://github.com/Kataiser/fast-package-file/issues
-        - Source Code: https://github.com/Kataiser/fast-package-file
-        
-        License
-        -------
-        
+        ## License
         The project is licensed under the MIT license.
         
 Platform: UNKNOWN
