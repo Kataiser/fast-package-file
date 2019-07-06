@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Overview: module code &mdash; fast-package-file 1.1 documentation</title>
+  <title>Packaged data file format &mdash; fast-package-file 1.1 documentation</title>
   
 
   
@@ -34,7 +34,8 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Function reference" href="funcs.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -82,9 +83,12 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../guide/funcs.html">Function reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guide/format.html">Packaged data file format</a></li>
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="funcs.html">Function reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Packaged data file format</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#file-location-header-json">File location header (JSON)</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -130,10 +134,14 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Overview: module code</li>
+      <li>Packaged data file format</li>
     
     
       <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/guide/format.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -145,14 +153,56 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>All modules for which code is available</h1>
-<ul><li><a href="fast_package_file.html">fast_package_file</a></li>
+  <div class="section" id="packaged-data-file-format">
+<h1>Packaged data file format<a class="headerlink" href="#packaged-data-file-format" title="Permalink to this headline">¶</a></h1>
+<p>Although the builder and loader for this format are implemented in Python, the format can of course be read by any languange.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0x00</span></code> (8-byte unsigned little-endian int): Size of the file location header, in bytes, as stored in the file (i.e. after compression).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0x08</span></code> (1-byte bool): Whether the header is compressed (not including these first 10 bytes, which are never compressed).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0x09</span></code> (1-byte bool): Whether the file paths use crc32 encoding.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0x0A</span></code> (UTF-8 string): The file location header, as JSON.</p></li>
+<li><p>The rest is file data, placed end-to-end.</p></li>
 </ul>
+</div></blockquote>
+<div class="section" id="file-location-header-json">
+<h2>File location header (JSON)<a class="headerlink" href="#file-location-header-json" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{&quot;folder\\file1.txt&quot;:
+        [file location, relative to the end of the entire header (int),
+         file size, after compression if enabled (int),
+         file is compressed (bool),
+         first byte of file (int),
+         last byte of file (int)],
+&quot;folder\\file2.txt&quot;: [...], ...}
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This example is multi-line for readability, but the actual format has no newlines.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>File paths are stored as actual double backslashes (<code class="docutils literal notranslate"><span class="pre">\\</span></code>). Python’s JSON loader handles this automatically, make sure yours does or reformat the string.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If using crc32 file paths, they are stored as strings of integers.</p>
+</div>
+</div>
+</div>
+
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="funcs.html" class="btn btn-neutral float-left" title="Function reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

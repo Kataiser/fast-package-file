@@ -214,7 +214,7 @@ def build(directory: str, target: str, compress: bool = True, keep_comp_threshol
         compress every file no matter what.
     :param hash_mode: The hash method to use to ensure file validity. Can be "md5" or "sha256". If :py:class:`None` (the default), only the first and last bytes are compared.
     :param comp_func: A supplied decompression function that takes :py:class:`bytes` and returns :py:class:`bytes`. Some recommendations: LZMA, LZMA2, Deflate, BZip2, Oodle, or Zstandard.
-    :param crc32_paths: Store file paths as `crc32 <https://en.wikipedia.org/wiki/Cyclic_redundancy_check>`_ numbers.
+    :param crc32_paths: Store file paths as `crc32 <https://en.wikipedia.org/wiki/Cyclic_redundancy_check>`_ numbers. Useful for obfuscating file names and paths.
     :param progress_bar: Whether to show a progress bar (uses `tqdm <https://github.com/tqdm/tqdm>`_). If tqdm isn't installed, this is irrelevant.
     :param silent: Disable all prints.
     """

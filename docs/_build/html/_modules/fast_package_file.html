@@ -84,6 +84,7 @@
             
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guide/funcs.html">Function reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/format.html">Packaged data file format</a></li>
 </ul>
 
             
@@ -363,7 +364,7 @@
 <span class="sd">        compress every file no matter what.</span>
 <span class="sd">    :param hash_mode: The hash method to use to ensure file validity. Can be &quot;md5&quot; or &quot;sha256&quot;. If :py:class:`None` (the default), only the first and last bytes are compared.</span>
 <span class="sd">    :param comp_func: A supplied decompression function that takes :py:class:`bytes` and returns :py:class:`bytes`. Some recommendations: LZMA, LZMA2, Deflate, BZip2, Oodle, or Zstandard.</span>
-<span class="sd">    :param crc32_paths: Store file paths as `crc32 &lt;https://en.wikipedia.org/wiki/Cyclic_redundancy_check&gt;`_ numbers.</span>
+<span class="sd">    :param crc32_paths: Store file paths as `crc32 &lt;https://en.wikipedia.org/wiki/Cyclic_redundancy_check&gt;`_ numbers. Useful for obfuscating file names and paths.</span>
 <span class="sd">    :param progress_bar: Whether to show a progress bar (uses `tqdm &lt;https://github.com/tqdm/tqdm&gt;`_). If tqdm isn&#39;t installed, this is irrelevant.</span>
 <span class="sd">    :param silent: Disable all prints.</span>
 <span class="sd">    &quot;&quot;&quot;</span>

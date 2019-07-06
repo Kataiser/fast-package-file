@@ -58,6 +58,7 @@ Usage guide
    :maxdepth: 2
 
    guide/funcs
+   guide/format
 
 Contribute
 ----------

@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Packaged data file format" href="format.html" />
     <link rel="prev" title="fast_package_file" href="../index.html" /> 
 </head>
 
@@ -90,6 +91,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#helpers">Helpers</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="format.html">Packaged data file format</a></li>
 </ul>
 
             
@@ -172,7 +174,7 @@
 compress every file no matter what.</p></li>
 <li><p><strong>hash_mode</strong> – The hash method to use to ensure file validity. Can be “md5” or “sha256”. If <code class="xref py py-class docutils literal notranslate"><span class="pre">None</span></code> (the default), only the first and last bytes are compared.</p></li>
 <li><p><strong>comp_func</strong> – A supplied decompression function that takes <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code> and returns <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>. Some recommendations: LZMA, LZMA2, Deflate, BZip2, Oodle, or Zstandard.</p></li>
-<li><p><strong>crc32_paths</strong> – Store file paths as <a class="reference external" href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check">crc32</a> numbers.</p></li>
+<li><p><strong>crc32_paths</strong> – Store file paths as <a class="reference external" href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check">crc32</a> numbers. Useful for obfuscating file names and paths.</p></li>
 <li><p><strong>progress_bar</strong> – Whether to show a progress bar (uses <a class="reference external" href="https://github.com/tqdm/tqdm">tqdm</a>). If tqdm isn’t installed, this is irrelevant.</p></li>
 <li><p><strong>silent</strong> – Disable all prints.</p></li>
 </ul>
@@ -325,6 +327,8 @@ location data.</p>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="format.html" class="btn btn-neutral float-right" title="Packaged data file format" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../index.html" class="btn btn-neutral float-left" title="fast_package_file" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
