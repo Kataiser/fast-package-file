@@ -128,7 +128,7 @@ class PackagedDataFile:
         """
         Load multiple files at once, based on a prefix and/or a postfix for the file path (uses ``.startswith`` and ``.endswith``).
 
-        :param prefix: File path prefix (e.g. a folder).
+        :param prefix: File path prefix (e.g. a subdirectory).
         :param postfix: File path postfix (e.g. a file extension).
         :returns: A :py:class:`dict`, formatted as ``{'path': bytes}``.
         """
