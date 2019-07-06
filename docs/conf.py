@@ -12,7 +12,9 @@
 
 import os
 import sys
-sys.path.insert(0, r'C:\Users\trial\PycharmProjects\dir packer\fast-package-file')
+os.chdir('..')
+sys.path.insert(0, os.path.abspath('.'))
+os.chdir('docs')
 import fast_package_file
 
 
