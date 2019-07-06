@@ -26,10 +26,18 @@ except ImportError:
 
 
 class PackagedDataFile:
-    # load and parse file locations (indices?) header in init in order to not do so each time a file is loaded (if prepare == True)
-    def __init__(self, data_file_path: str, prepare: bool = True):
+    def __init__(self, data_file_path: str, prepare: bool = True, decomp_func: Callable[[bytes], bytes] = None):
+        """
+        Prepare a packaged data file.
+
+        :param data_file_path: Location of the package.
+        :param prepare: Whether to load, decompress (if necessary), and parse the file location header now, or wait until the first file is loaded. Regardless, the entire package is not
+            loaded.
+        :param decomp_func: A supplied decompression function.
+        """
         self.__data_file_path = data_file_path
         self.__prepared = prepare
+        self.__decomp_func = decomp_func
 
         if prepare:
             if not os.path.exists(self.__data_file_path):  # check if file exists
@@ -46,7 +54,8 @@ class PackagedDataFile:
                 loc_data_raw = data_file_init.read(self.__loc_data_length)  # read the compressed header
 
             try:
-                loc_data_bin = gzip.decompress(loc_data_raw)  # decompress
+                decomp_func_loc_data = decomp_func if decomp_func else gzip.decompress
+                loc_data_bin = decomp_func_loc_data(loc_data_raw)  # decompress
             except (OSError, zlib.error):
                 loc_data_bin = loc_data_raw
 
@@ -57,10 +66,19 @@ class PackagedDataFile:
             except UnicodeDecodeError as utf8_error:
                 raise PackageDataError("{} is corrupted or malformed ({})".format(self.__data_file_path, utf8_error))
 
-    # load an individual file from the build
-    def load_file(self, file: str, decomp_func: Callable[[bytes], bytes] = None) -> bytes:
+    def load_file(self, file: str) -> bytes:
+        """
+        Load a single file from the package. Also loads and parses the location data header for the packge, if it hasn't been already.
+
+        :param file: The path to the file, relative to the input directory (e.g. a file at surface level would be ``file.txt``, and one folder in would be ``folder\\file.txt``).
+        :returns: The file as a bytes object, uncompressed.
+
+        .. note::
+            File paths stored within a package file are modified to always use backslashes as path seperators, regardless of what OS is used to build or load the package. Be sure to either
+            escape the backslashes or use raw strings.
+        """
         if not self.__prepared:
-            self.__init__(self.__data_file_path, prepare=True)
+            self.__init__(self.__data_file_path, prepare=True, decomp_func=self.__decomp_func)  # elegant
 
         try:
             file_loc_data = self.file_data[file]  # get the file's stats: (offset, length, compressed (1 or 0), first byte, last byte)
@@ -73,8 +91,8 @@ class PackagedDataFile:
 
         if file_loc_data[2] == 1:  # is compressed
             try:
-                if decomp_func:
-                    data_file_out = decomp_func(data_file_raw)
+                if self.__decomp_func:
+                    data_file_out = self.__decomp_func(data_file_raw)
                 else:
                     data_file_out = gzip.decompress(data_file_raw)
             except Exception as error:
@@ -106,13 +124,19 @@ class PackagedDataFile:
 
         return data_file_out
 
-    # load multiple files at once (most likely a subdirectory)
-    def load_bulk(self, prefix: str = '', postfix: str = '', decomp_func: Callable[[bytes], bytes] = None) -> Dict[str, bytes]:
+    def load_bulk(self, prefix: str = '', postfix: str = '') -> Dict[str, bytes]:
+        """
+        Load multiple files at once, based on a prefix and/or a postfix for the file path (uses ``.startswith`` and ``.endswith``).
+
+        :param prefix: File path prefix (e.g. a folder).
+        :param postfix: File path postfix (e.g. a file extension).
+        :returns: A :py:class:`dict`, formatted as ``{'path': bytes}``.
+        """
         out_data = {}
 
         for file_in_package in self.file_data.keys():
             if file_in_package.startswith(prefix) and file_in_package.endswith(postfix):
-                out_data[file_in_package] = (self.load_file(file_in_package, decomp_func))
+                out_data[file_in_package] = (self.load_file(file_in_package))
 
         if out_data:
             return out_data
@@ -120,20 +144,44 @@ class PackagedDataFile:
             raise PackageDataError("{} is corrupted or malformed (no file paths start with '{}' and end with '{}')".format(self.__data_file_path, prefix, postfix))
 
     def __repr__(self):
+        """
+        Includes path, number of files, and total file size.
+
+        :returns: :py:class:`str`
+        """
         return "<fast_package_file.PackagedDataFile object for {} ({} files, {} bytes)>".format(self.__data_file_path, len(self.file_data), os.stat(self.__data_file_path).st_size)
 
 
-# prepare a package file and load a file from it
 def oneshot(data_file_path: str, file: str, decomp_func: Callable[[bytes], bytes] = None) -> bytes:
-    oneshot_package = PackagedDataFile(data_file_path)
-    oneshot_file = oneshot_package.load_file(file, decomp_func)
+    """
+    Load a single file from a package file.
+
+    :param data_file_path: Location of the package.
+    :param file: The path to the file, relative to the input directory (same as :py:func:`~PackagedDataFile.load_file`).
+    :param decomp_func: A supplied decompression function.
+    :returns: The file as :py:class:`bytes`, uncompressed.
+
+    .. note::
+        If you're planning on ever loading another file from the same package, it's recommended to use :py:mod:`~PackagedDataFile` explicitly since it caches the file
+        location data.
+    """
+    oneshot_package = PackagedDataFile(data_file_path, decomp_func=decomp_func)
+    oneshot_file = oneshot_package.load_file(file)
     return oneshot_file
 
 
-# prepare a package file and load multiple files from it
 def oneshot_bulk(data_file_path: str, prefix: str = '', postfix: str = '', decomp_func: Callable[[bytes], bytes] = None) -> Dict[str, bytes]:
-    oneshot_package = PackagedDataFile(data_file_path)
-    oneshot_list = oneshot_package.load_bulk(prefix, postfix, decomp_func)
+    """
+    Combines :py:func:`oneshot` and :py:func:`~PackagedDataFile.load_bulk`. Same note as :py:func:`oneshot`.
+
+    :param data_file_path: Location of the package.
+    :param prefix: Same as :py:func:`~PackagedDataFile.load_bulk`.
+    :param postfix: Same as :py:func:`~PackagedDataFile.load_bulk`.
+    :param decomp_func: A supplied decompression function.
+    :returns: A :py:class:`dict`, formatted as ``{'path': bytes}``.
+    """
+    oneshot_package = PackagedDataFile(data_file_path, decomp_func=decomp_func)
+    oneshot_list = oneshot_package.load_bulk(prefix, postfix)
     return oneshot_list
 
 
@@ -143,8 +191,21 @@ class PackageDataError(Exception):
 
 
 # build a directory and all subdirectories into a single file (this part isn't fast tbh)
-def build(directory: str, target: str, compress: bool = True, keep_gzip_threshold: float = 0.98, hash_mode: Union[str, None] = None, comp_func: Callable[[bytes], bytes] = None,
+def build(directory: str, target: str, compress: bool = True, keep_comp_threshold: float = 0.98, hash_mode: Union[str, None] = None, comp_func: Callable[[bytes], bytes] = None,
           progress_bar: bool = True, silent: bool = False):
+    """
+    Build a packaged data file from a directory.
+
+    :param directory: The directory to package. Includes all subdirectories.
+    :param target: The path for the package file. If it already exists, it's overwritten.
+    :param compress: Whether to compress the package, either with ``comp_func`` or Gzip by default.
+    :param keep_comp_threshold: 0 through 1 (default is 0.98). For each input file, if compression doesn't improve file size by this ratio, the file is instead stored uncompressed. Set to 1 to
+        compress every file no matter what.
+    :param hash_mode: The hash method to use to ensure file validity. Can be ``md5`` or ``sha256``. If :py:class:`None` (the default), only the first and last bytes are compared.
+    :param comp_func: A supplied decompression function that takes :py:class:`bytes` and returns :py:class:`bytes`. Some recommendations: LZMA, LZMA2, Deflate, BZip2, Oodle, or Zstandard.
+    :param progress_bar: Whether to show a progress bar (uses `tqdm <https://github.com/tqdm/tqdm>`_). If tqdm isn't installed, this is irrelevant.
+    :param silent: Disable all prints.
+    """
     print(directory)
 
     start_time = time.perf_counter()
@@ -190,7 +251,7 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
             else:
                 input_file_data_comp = _gzip_compress_fix(input_file_data_raw)
 
-            if len(input_file_data_comp) < len(input_file_data_raw) * keep_gzip_threshold:  # if compression improves file size
+            if len(input_file_data_comp) < len(input_file_data_raw) * keep_comp_threshold:  # if compression improves file size
                 input_file_data = input_file_data_comp
                 compressed = True
                 gz_path = '{}.gztemp'.format(file_path)  # because storing every file's data takes too much memory
@@ -224,8 +285,9 @@ def build(directory: str, target: str, compress: bool = True, keep_gzip_threshol
             hasher.update(input_file_data_raw)
             loc_data_save[file_path_out].append('sha256{}'.format(hasher.hexdigest()))
 
+    comp_func_loc_data = comp_func if (comp_func and compress) else _gzip_compress_fix
     loc_data_save_json = json.dumps(loc_data_save, separators=(',', ':'), sort_keys=True).encode('utf-8')  # convert header to binary
-    loc_data_save_out = _gzip_compress_fix(loc_data_save_json) if compress else loc_data_save_json  # and compress it
+    loc_data_save_out = comp_func_loc_data(loc_data_save_json) if compress else loc_data_save_json  # and compress it
     loc_data_save_length = (len(loc_data_save_out)).to_bytes(8, byteorder='little')  # get its length as an 8 bit binary
 
     with open(target, 'wb') as out_file:
