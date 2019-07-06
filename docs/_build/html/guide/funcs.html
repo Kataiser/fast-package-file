@@ -1,0 +1,359 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Function reference &mdash; fast-package-file 1.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="fast_package_file" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> fast-package-file
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Function reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-fast_package_file">Building packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-data-out-of-packages">Getting data out of packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#helpers">Helpers</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">fast-package-file</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Function reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/guide/funcs.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="function-reference">
+<h1>Function reference<a class="headerlink" href="#function-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-fast_package_file">
+<span id="building-packages"></span><h2>Building packages<a class="headerlink" href="#module-fast_package_file" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="fast_package_file.build">
+<code class="sig-prename descclassname">fast_package_file.</code><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">directory: str, target: str, compress: bool = True, keep_comp_threshold: float = 0.98, hash_mode: Optional[str] = None, comp_func: Callable[[bytes], bytes] = None, progress_bar: bool = True, silent: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/fast_package_file.html#build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fast_package_file.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a packaged data file from a directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory</strong> – The directory to package. Includes all subdirectories.</p></li>
+<li><p><strong>target</strong> – The path for the package file. If it already exists, it’s overwritten.</p></li>
+<li><p><strong>compress</strong> – Whether to compress the package, either with <code class="docutils literal notranslate"><span class="pre">comp_func</span></code> or Gzip by default.</p></li>
+<li><p><strong>keep_comp_threshold</strong> – 0 through 1 (default is 0.98). For each input file, if compression doesn’t improve file size by this ratio, the file is instead stored uncompressed. Set to 1 to
+compress every file no matter what.</p></li>
+<li><p><strong>hash_mode</strong> – The hash method to use to ensure file validity. Can be <code class="docutils literal notranslate"><span class="pre">md5</span></code> or <code class="docutils literal notranslate"><span class="pre">sha256</span></code>. If <code class="xref py py-class docutils literal notranslate"><span class="pre">None</span></code> (the default), only the first and last bytes are compared.</p></li>
+<li><p><strong>comp_func</strong> – A supplied decompression function that takes <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code> and returns <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>. Some recommendations: LZMA, LZMA2, Deflate, BZip2, Oodle, or Zstandard.</p></li>
+<li><p><strong>progress_bar</strong> – Whether to show a progress bar (uses <a class="reference external" href="https://github.com/tqdm/tqdm">tqdm</a>). If tqdm isn’t installed, this is irrelevant.</p></li>
+<li><p><strong>silent</strong> – Disable all prints.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="getting-data-out-of-packages">
+<h2>Getting data out of packages<a class="headerlink" href="#getting-data-out-of-packages" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="fast_package_file.PackagedDataFile.__init__">
+<code class="sig-prename descclassname">fast_package_file.PackagedDataFile.</code><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">self, data_file_path: str, prepare: bool = True, decomp_func: Callable[[bytes], bytes] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#fast_package_file.PackagedDataFile.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare a packaged data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_file_path</strong> – Location of the package.</p></li>
+<li><p><strong>prepare</strong> – Whether to load, decompress (if necessary), and parse the file location header now, or wait until the first file is loaded. Regardless, the entire package is not
+loaded.</p></li>
+<li><p><strong>decomp_func</strong> – A supplied decompression function.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="fast_package_file.PackagedDataFile.load_file">
+<code class="sig-prename descclassname">fast_package_file.PackagedDataFile.</code><code class="sig-name descname">load_file</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">file: str</em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#fast_package_file.PackagedDataFile.load_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a single file from the package. Also loads and parses the location data header for the packge, if it hasn’t been already.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file</strong> – The path to the file, relative to the input directory (e.g. a file at surface level would be <code class="docutils literal notranslate"><span class="pre">file.txt</span></code>, and one folder in would be <code class="docutils literal notranslate"><span class="pre">folder\file.txt</span></code>).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The file as a bytes object, uncompressed.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>File paths stored within a package file are modified to always use backslashes as path seperators, regardless of what OS is used to build or load the package. Be sure to either
+escape the backslashes or use raw strings.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="fast_package_file.PackagedDataFile.load_bulk">
+<code class="sig-prename descclassname">fast_package_file.PackagedDataFile.</code><code class="sig-name descname">load_bulk</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">prefix: str = ''</em>, <em class="sig-param">postfix: str = ''</em><span class="sig-paren">)</span> &#x2192; Dict[str, bytes]<a class="headerlink" href="#fast_package_file.PackagedDataFile.load_bulk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load multiple files at once, based on a prefix and/or a postfix for the file path (uses <code class="docutils literal notranslate"><span class="pre">.startswith</span></code> and <code class="docutils literal notranslate"><span class="pre">.endswith</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prefix</strong> – File path prefix (e.g. a folder).</p></li>
+<li><p><strong>postfix</strong> – File path postfix (e.g. a file extension).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, formatted as <code class="docutils literal notranslate"><span class="pre">{'path':</span> <span class="pre">bytes}</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="helpers">
+<h2>Helpers<a class="headerlink" href="#helpers" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="fast_package_file.oneshot">
+<code class="sig-prename descclassname">fast_package_file.</code><code class="sig-name descname">oneshot</code><span class="sig-paren">(</span><em class="sig-param">data_file_path: str, file: str, decomp_func: Callable[[bytes], bytes] = None</em><span class="sig-paren">)</span> &#x2192; bytes<a class="reference internal" href="../_modules/fast_package_file.html#oneshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fast_package_file.oneshot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a single file from a package file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_file_path</strong> – Location of the package.</p></li>
+<li><p><strong>file</strong> – The path to the file, relative to the input directory (same as <a class="reference internal" href="#fast_package_file.PackagedDataFile.load_file" title="fast_package_file.PackagedDataFile.load_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_file()</span></code></a>).</p></li>
+<li><p><strong>decomp_func</strong> – A supplied decompression function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The file as <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, uncompressed.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you’re planning on ever loading another file from the same package, it’s recommended to use <code class="xref py py-mod docutils literal notranslate"><span class="pre">PackagedDataFile</span></code> explicitly since it caches the file
+location data.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="fast_package_file.oneshot_bulk">
+<code class="sig-prename descclassname">fast_package_file.</code><code class="sig-name descname">oneshot_bulk</code><span class="sig-paren">(</span><em class="sig-param">data_file_path: str, prefix: str = '', postfix: str = '', decomp_func: Callable[[bytes], bytes] = None</em><span class="sig-paren">)</span> &#x2192; Dict[str, bytes]<a class="reference internal" href="../_modules/fast_package_file.html#oneshot_bulk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fast_package_file.oneshot_bulk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines <a class="reference internal" href="#fast_package_file.oneshot" title="fast_package_file.oneshot"><code class="xref py py-func docutils literal notranslate"><span class="pre">oneshot()</span></code></a> and <a class="reference internal" href="#fast_package_file.PackagedDataFile.load_bulk" title="fast_package_file.PackagedDataFile.load_bulk"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_bulk()</span></code></a>. Same note as <a class="reference internal" href="#fast_package_file.oneshot" title="fast_package_file.oneshot"><code class="xref py py-func docutils literal notranslate"><span class="pre">oneshot()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_file_path</strong> – Location of the package.</p></li>
+<li><p><strong>prefix</strong> – Same as <a class="reference internal" href="#fast_package_file.PackagedDataFile.load_bulk" title="fast_package_file.PackagedDataFile.load_bulk"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_bulk()</span></code></a>.</p></li>
+<li><p><strong>postfix</strong> – Same as <a class="reference internal" href="#fast_package_file.PackagedDataFile.load_bulk" title="fast_package_file.PackagedDataFile.load_bulk"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_bulk()</span></code></a>.</p></li>
+<li><p><strong>decomp_func</strong> – A supplied decompression function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, formatted as <code class="docutils literal notranslate"><span class="pre">{'path':</span> <span class="pre">bytes}</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fast_package_file.PackagedDataFile.file_data">
+<code class="sig-prename descclassname">fast_package_file.PackagedDataFile.</code><code class="sig-name descname">file_data</code><a class="headerlink" href="#fast_package_file.PackagedDataFile.file_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary containing the file location data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>: <code class="docutils literal notranslate"><span class="pre">{'path':</span> <span class="pre">(offset,</span> <span class="pre">length,</span> <span class="pre">compressed</span> <span class="pre">(1</span> <span class="pre">or</span> <span class="pre">0),</span> <span class="pre">first</span> <span class="pre">byte,</span> <span class="pre">last</span> <span class="pre">byte)}</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="fast_package_file.PackagedDataFile.__repr__">
+<code class="sig-prename descclassname">fast_package_file.PackagedDataFile.</code><code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#fast_package_file.PackagedDataFile.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Includes path, number of files, and total file size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="exception">
+<dt id="fast_package_file.PackageDataError">
+<em class="property">exception </em><code class="sig-prename descclassname">fast_package_file.</code><code class="sig-name descname">PackageDataError</code><a class="reference internal" href="../_modules/fast_package_file.html#PackageDataError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fast_package_file.PackageDataError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../index.html" class="btn btn-neutral float-left" title="fast_package_file" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Kataiser
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

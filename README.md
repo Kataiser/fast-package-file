@@ -42,7 +42,7 @@ pip install git+git://github.com/Kataiser/fast-package-file.git@master#egg=fast_
 ```
 
 ## Documentation
-More details will be available at https://fast-package-file.readthedocs.io/en/latest/
+More details are available at https://fast-package-file.readthedocs.io/en/latest/
 
 ## Features
 -   Is fast because only the data needed is loaded from the package file, total package size is irrelevant

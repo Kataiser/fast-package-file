@@ -52,6 +52,13 @@ Features
 - Inspired by video game packaging, such as UE4's .pak or GTA V's .rpf formats
 - Cross-platform, has CI for Linux, MacOS, and Windows
 
+Usage guide
+-----------
+.. toctree::
+   :maxdepth: 2
+
+   guide/funcs
+
 Contribute
 ----------
 
