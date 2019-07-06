@@ -60,8 +60,8 @@ class PackagedDataFile:
 
                 try:
                     loc_data_bin = decomp_func_loc_data(loc_data_raw)  # decompress
-                except zlib.error as zlib_error:
-                    raise PackageDataError("{} is corrupted or malformed ({})".format(self.__data_file_path, zlib_error))
+                except (OSError, zlib.error) as gzip_error:
+                    raise PackageDataError("{} is corrupted or malformed ({})".format(self.__data_file_path, gzip_error))
             else:
                 loc_data_bin = loc_data_raw
 
