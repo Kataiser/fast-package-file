@@ -160,18 +160,19 @@
 <span id="building-packages"></span><h2>Building packages<a class="headerlink" href="#module-fast_package_file" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="fast_package_file.build">
-<code class="sig-prename descclassname">fast_package_file.</code><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">directory: str, target: str, compress: bool = True, keep_comp_threshold: float = 0.98, hash_mode: Optional[str] = None, comp_func: Callable[[bytes], bytes] = None, progress_bar: bool = True, silent: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/fast_package_file.html#build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fast_package_file.build" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">fast_package_file.</code><code class="sig-name descname">build</code><span class="sig-paren">(</span><em class="sig-param">directory: str, target: str, compress: bool = True, keep_comp_threshold: float = 0.98, hash_mode: Optional[str] = None, comp_func: Callable[[bytes], bytes] = None, crc32_paths: bool = False, progress_bar: bool = True, silent: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/fast_package_file.html#build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fast_package_file.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a packaged data file from a directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>directory</strong> – The directory to package. Includes all subdirectories.</p></li>
-<li><p><strong>target</strong> – The path for the package file. If it already exists, it’s overwritten.</p></li>
+<li><p><strong>target</strong> – The path for the package file. If it already exists, it’s overwritten. The file extension can be whatever you like.</p></li>
 <li><p><strong>compress</strong> – Whether to compress the package, either with <code class="docutils literal notranslate"><span class="pre">comp_func</span></code> or Gzip by default.</p></li>
 <li><p><strong>keep_comp_threshold</strong> – 0 through 1 (default is 0.98). For each input file, if compression doesn’t improve file size by this ratio, the file is instead stored uncompressed. Set to 1 to
 compress every file no matter what.</p></li>
 <li><p><strong>hash_mode</strong> – The hash method to use to ensure file validity. Can be “md5” or “sha256”. If <code class="xref py py-class docutils literal notranslate"><span class="pre">None</span></code> (the default), only the first and last bytes are compared.</p></li>
 <li><p><strong>comp_func</strong> – A supplied decompression function that takes <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code> and returns <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>. Some recommendations: LZMA, LZMA2, Deflate, BZip2, Oodle, or Zstandard.</p></li>
+<li><p><strong>crc32_paths</strong> – Store file paths as <a class="reference external" href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check">crc32</a> numbers.</p></li>
 <li><p><strong>progress_bar</strong> – Whether to show a progress bar (uses <a class="reference external" href="https://github.com/tqdm/tqdm">tqdm</a>). If tqdm isn’t installed, this is irrelevant.</p></li>
 <li><p><strong>silent</strong> – Disable all prints.</p></li>
 </ul>
@@ -232,6 +233,10 @@ escape the backslashes or use raw strings.</p>
 <dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, formatted as <code class="docutils literal notranslate"><span class="pre">{'path':</span> <span class="pre">bytes}</span></code>.</p>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Doesn’t support packages using crc32 file paths.</p>
+</div>
 </dd></dl>
 
 </div>
@@ -277,6 +282,10 @@ location data.</p>
 <dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, formatted as <code class="docutils literal notranslate"><span class="pre">{'path':</span> <span class="pre">bytes}</span></code>.</p>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Doesn’t support packages using crc32 file paths.</p>
+</div>
 </dd></dl>
 
 <dl class="attribute">

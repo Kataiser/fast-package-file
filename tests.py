@@ -24,6 +24,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
         fast_package_file.build('docs_v1.0_testing', test_list[4], hash_mode='sha256', compress=False)
         fast_package_file.build('docs_v1.0_testing', test_list[5], hash_mode='sha256')
         fast_package_file.build('docs_v1.0_testing', test_list[6], comp_func=lzma.compress)
+        fast_package_file.build('docs_v1.0_testing', test_list[7], crc32_paths=True)
 
         file_data = {}
         for file in ref_list + test_list:
@@ -73,7 +74,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
                 test_file_unprepared = fast_package_file.PackagedDataFile(test_file, prepare=False, decomp_func=lzma.decompress)
             else:
                 test_file_loaded = fast_package_file.PackagedDataFile(test_file)
-                test_file_unprepared = fast_package_file.PackagedDataFile(test_file)
+                test_file_unprepared = fast_package_file.PackagedDataFile(test_file, prepare=False)
 
             self.assertEqual(test_file_loaded.load_file(r'index.rst'), dist_file_ref_rst)
             self.assertEqual(test_file_loaded.load_file(r'_build\html\index.html'), dist_file_ref_html)
@@ -92,6 +93,9 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             genindex_html_ref = genindex_html.read()
 
         for test_file in test_list:
+            if 'crc32' in test_file:
+                continue  # bulk loading doesn't support crc32
+
             if 'lzma' in test_file:
                 test_file_loaded = fast_package_file.PackagedDataFile(test_file, decomp_func=lzma.decompress)
             else:
@@ -112,6 +116,9 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             genindex_html_ref = genindex_html.read()
 
         for test_file in test_list:
+            if 'crc32' in test_file:
+                continue  # bulk loading doesn't support crc32
+
             if 'lzma' in test_file:
                 self.assertEqual(fast_package_file.oneshot(test_file, r'_build\doctrees\environment.pickle', decomp_func=lzma.decompress), environment_pickle_ref)
                 self.assertEqual(fast_package_file.oneshot_bulk(test_file, prefix=r'_build\html', postfix='.html', decomp_func=lzma.decompress)[r'_build\html\genindex.html'], genindex_html_ref)
@@ -152,7 +159,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
                     test_compressed_bad_header.write(test_compressed_data_read[120:])
 
             fast_package_file.PackagedDataFile('test_compressed_bad_json.data')
-        self.assertEqual(e.exception.args[0], "test_compressed_bad_json.data is corrupted or malformed ('utf-8' codec can't decode byte 0x8b in position 1: invalid start byte)")
+        self.assertEqual(e.exception.args[0], "test_compressed_bad_json.data is corrupted or malformed (Error -3 while decompressing data: invalid distance too far back)")
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
             with open('test_uncompressed.data', 'rb') as test_uncompressed_data:
@@ -174,14 +181,6 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             test_compressed_data = fast_package_file.PackagedDataFile('test_compressed.data')
             test_compressed_data.load_file('a non-existent file')
         self.assertEqual(e.exception.args[0], "test_compressed.data is corrupted or malformed (file 'a non-existent file' doesn't exist in location header)")
-
-        with self.assertRaises(fast_package_file.PackageDataError) as e:
-            with open('test_uncompressed.data', 'rb') as test_uncompressed_data:
-                with open('test_uncompressed_bad_cstate.data', 'wb') as test_uncompressed_bad_cstate:
-                    test_uncompressed_bad_cstate.write(test_uncompressed_data.read().replace(b',0,', b',2,'))
-
-            fast_package_file.PackagedDataFile('test_uncompressed_bad_cstate.data').load_file('index.rst')
-        self.assertEqual(e.exception.args[0], "test_uncompressed_bad_cstate.data is corrupted or malformed (compressed state of 'index.rst' is 2, should be 1 or 0)")
 
         with self.assertRaises(fast_package_file.PackageDataError) as e:
             with open('test_md5_uncompressed.data', 'rb') as test_md5_uncompressed_data:
@@ -218,7 +217,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
         self.assertEqual(e.exception.args[0], "test_compressed.data is corrupted or malformed (no file paths start with 'pre' and end with 'post')")
 
         for file_to_delete in ['test_compressed_bad_header.data', 'test_compressed_bad_json.data', 'test_md5_uncompressed_bad_filedata.data', 'test_md5_uncompressed_bad_hash_method.data',
-                               'test_uncompressed_bad_cstate.data', 'test_uncompressed_bad_filedata.data', 'test_uncompressed_bad_json.data']:
+                               'test_uncompressed_bad_filedata.data', 'test_uncompressed_bad_json.data']:
             os.remove(file_to_delete)
 
 
@@ -231,10 +230,11 @@ def build_references():
     fast_package_file.build('docs_v1.0_testing', ref_list[4], hash_mode='sha256', compress=False)
     fast_package_file.build('docs_v1.0_testing', ref_list[5], hash_mode='sha256')
     fast_package_file.build('docs_v1.0_testing', ref_list[6], comp_func=lzma.compress)
+    fast_package_file.build('docs_v1.0_testing', ref_list[7], crc32_paths=True)
 
 
 ref_list = ['ref_uncompressed.data', 'ref_compressed.data', 'ref_md5_uncompressed.data', 'ref_md5_compressed.data', 'ref_sha256_uncompressed.data', 'ref_sha256_compressed.data',
-            'ref_lzma.data']
+            'ref_lzma.data', 'ref_crc32.data']
 test_list = [ref.replace('ref', 'test') for ref in ref_list]
 
 

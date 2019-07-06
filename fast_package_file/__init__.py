@@ -17,7 +17,7 @@ import os
 import sys
 import time
 import zlib
-from typing import List, Union, Callable, Dict
+from typing import Union, Callable, Dict
 
 try:
     import tqdm  # a neat progress bar
@@ -51,12 +51,18 @@ class PackagedDataFile:
                 if self.__loc_data_length < 0 or self.__loc_data_length > 1000000000000:  # 1 TB seems to be a reasonable limit
                     raise PackageDataError("{} is corrupted or malformed (header length is {})".format(self.__data_file_path, self.__loc_data_length))
 
+                loc_data_compressed = bool.from_bytes(data_file_init.read(1), byteorder='little')  # read header's compressed state
+                self.__loc_data_crc32 = bool.from_bytes(data_file_init.read(1), byteorder='little')  # read header's path format
                 loc_data_raw = data_file_init.read(self.__loc_data_length)  # read the compressed header
 
-            try:
+            if loc_data_compressed:
                 decomp_func_loc_data = decomp_func if decomp_func else gzip.decompress
-                loc_data_bin = decomp_func_loc_data(loc_data_raw)  # decompress
-            except (OSError, zlib.error):
+
+                try:
+                    loc_data_bin = decomp_func_loc_data(loc_data_raw)  # decompress
+                except zlib.error as zlib_error:
+                    raise PackageDataError("{} is corrupted or malformed ({})".format(self.__data_file_path, zlib_error))
+            else:
                 loc_data_bin = loc_data_raw
 
             try:
@@ -81,15 +87,16 @@ class PackagedDataFile:
             self.__init__(self.__data_file_path, prepare=True, decomp_func=self.__decomp_func)  # elegant
 
         try:
-            file_loc_data = self.file_data[file]  # get the file's stats: (offset, length, compressed (1 or 0), first byte, last byte)
+            # get the file's stats: (offset, length, compressed (1 or 0), first byte, last byte)
+            file_loc_data = self.file_data[str(zlib.crc32(file.encode('utf-8'))) if self.__loc_data_crc32 else file]
         except KeyError:
             raise PackageDataError("{} is corrupted or malformed (file '{}' doesn't exist in location header)".format(self.__data_file_path, file))
 
         with open(self.__data_file_path, 'rb') as data_file:
-            data_file.seek(file_loc_data[0] + self.__loc_data_length + 8)  # account for header and the length data
+            data_file.seek(file_loc_data[0] + self.__loc_data_length + 10)  # account for header and other data
             data_file_raw = data_file.read(file_loc_data[1])
 
-        if file_loc_data[2] == 1:  # is compressed
+        if file_loc_data[2]:  # is compressed
             try:
                 if self.__decomp_func:
                     data_file_out = self.__decomp_func(data_file_raw)
@@ -97,10 +104,8 @@ class PackagedDataFile:
                     data_file_out = gzip.decompress(data_file_raw)
             except Exception as error:
                 raise PackageDataError("{} is corrupted or malformed (decompression error for {}: '{}')".format(self.__data_file_path, file, error))
-        elif file_loc_data[2] == 0:
-            data_file_out = data_file_raw
         else:
-            raise PackageDataError("{} is corrupted or malformed (compressed state of '{}' is {}, should be 1 or 0)".format(self.__data_file_path, file, file_loc_data[2]))
+            data_file_out = data_file_raw
 
         if len(file_loc_data) == 6:  # hash info exists
             if file_loc_data[5].startswith('md5   '):
@@ -131,6 +136,9 @@ class PackagedDataFile:
         :param prefix: File path prefix (e.g. a subdirectory).
         :param postfix: File path postfix (e.g. a file extension).
         :returns: A :py:class:`dict`, formatted as ``{'path': bytes}``.
+
+        .. note::
+            Doesn't support packages using crc32 file paths.
         """
         out_data = {}
 
@@ -179,6 +187,9 @@ def oneshot_bulk(data_file_path: str, prefix: str = '', postfix: str = '', decom
     :param postfix: Same as :py:func:`~PackagedDataFile.load_bulk`.
     :param decomp_func: A supplied decompression function.
     :returns: A :py:class:`dict`, formatted as ``{'path': bytes}``.
+
+    .. note::
+            Doesn't support packages using crc32 file paths.
     """
     oneshot_package = PackagedDataFile(data_file_path, decomp_func=decomp_func)
     oneshot_list = oneshot_package.load_bulk(prefix, postfix)
@@ -192,17 +203,18 @@ class PackageDataError(Exception):
 
 # build a directory and all subdirectories into a single file (this part isn't fast tbh)
 def build(directory: str, target: str, compress: bool = True, keep_comp_threshold: float = 0.98, hash_mode: Union[str, None] = None, comp_func: Callable[[bytes], bytes] = None,
-          progress_bar: bool = True, silent: bool = False):
+          crc32_paths: bool = False, progress_bar: bool = True, silent: bool = False):
     """
     Build a packaged data file from a directory.
 
     :param directory: The directory to package. Includes all subdirectories.
-    :param target: The path for the package file. If it already exists, it's overwritten.
+    :param target: The path for the package file. If it already exists, it's overwritten. The file extension can be whatever you like.
     :param compress: Whether to compress the package, either with ``comp_func`` or Gzip by default.
     :param keep_comp_threshold: 0 through 1 (default is 0.98). For each input file, if compression doesn't improve file size by this ratio, the file is instead stored uncompressed. Set to 1 to
         compress every file no matter what.
     :param hash_mode: The hash method to use to ensure file validity. Can be "md5" or "sha256". If :py:class:`None` (the default), only the first and last bytes are compared.
     :param comp_func: A supplied decompression function that takes :py:class:`bytes` and returns :py:class:`bytes`. Some recommendations: LZMA, LZMA2, Deflate, BZip2, Oodle, or Zstandard.
+    :param crc32_paths: Store file paths as `crc32 <https://en.wikipedia.org/wiki/Cyclic_redundancy_check>`_ numbers.
     :param progress_bar: Whether to show a progress bar (uses `tqdm <https://github.com/tqdm/tqdm>`_). If tqdm isn't installed, this is irrelevant.
     :param silent: Disable all prints.
     """
@@ -272,7 +284,10 @@ def build(directory: str, target: str, compress: bool = True, keep_comp_threshol
 
         file_path_short = file_path[len(directory) + len(os.sep):]  # removes some redundancy
         file_path_out = file_path_short.replace(os.sep, '\\')  # makes building uniform across OSs
-        loc_data_save[file_path_out] = [current_loc, len(input_file_data), 1 if compressed else 0, input_file_data[0], input_file_data[-1]]  # add file to header dictionary
+        if crc32_paths:
+            file_path_out = zlib.crc32(file_path_out.encode('utf-8'))
+
+        loc_data_save[file_path_out] = [current_loc, len(input_file_data), compressed, input_file_data[0], input_file_data[-1]]  # add file to header dictionary
         current_loc += len(input_file_data)  # keep track of offset
 
         # calculate and add hash, if enabled
@@ -292,6 +307,8 @@ def build(directory: str, target: str, compress: bool = True, keep_comp_threshol
 
     with open(target, 'wb') as out_file:
         out_file.write(loc_data_save_length)  # add the header's length
+        out_file.write(compress.to_bytes(1, byteorder='little'))  # add the header's compressed state
+        out_file.write(crc32_paths.to_bytes(1, byteorder='little'))  # add the header's path format
         out_file.write(loc_data_save_out)  # add the header
 
         for file_to_add_path in files_to_add:
