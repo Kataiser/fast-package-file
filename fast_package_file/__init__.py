@@ -201,7 +201,7 @@ def build(directory: str, target: str, compress: bool = True, keep_comp_threshol
     :param compress: Whether to compress the package, either with ``comp_func`` or Gzip by default.
     :param keep_comp_threshold: 0 through 1 (default is 0.98). For each input file, if compression doesn't improve file size by this ratio, the file is instead stored uncompressed. Set to 1 to
         compress every file no matter what.
-    :param hash_mode: The hash method to use to ensure file validity. Can be ``md5`` or ``sha256``. If :py:class:`None` (the default), only the first and last bytes are compared.
+    :param hash_mode: The hash method to use to ensure file validity. Can be "md5" or "sha256". If :py:class:`None` (the default), only the first and last bytes are compared.
     :param comp_func: A supplied decompression function that takes :py:class:`bytes` and returns :py:class:`bytes`. Some recommendations: LZMA, LZMA2, Deflate, BZip2, Oodle, or Zstandard.
     :param progress_bar: Whether to show a progress bar (uses `tqdm <https://github.com/tqdm/tqdm>`_). If tqdm isn't installed, this is irrelevant.
     :param silent: Disable all prints.
