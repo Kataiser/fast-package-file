@@ -230,7 +230,7 @@ def build_references():
     fast_package_file.build('docs_v1.0_testing', ref_list[4], hash_mode='sha256', compress=False)
     fast_package_file.build('docs_v1.0_testing', ref_list[5], hash_mode='sha256')
     fast_package_file.build('docs_v1.0_testing', ref_list[6], comp_func=lzma.compress)
-    fast_package_file.build('docs_v1.0_testing', ref_list[7], crc32_paths=True)
+    fast_package_file.build('docs_v1.0_testing', ref_list[7], hash_mode='crc32', crc32_paths=True)
 
 
 ref_list = ['ref_uncompressed.data', 'ref_compressed.data', 'ref_md5_uncompressed.data', 'ref_md5_compressed.data', 'ref_sha256_uncompressed.data', 'ref_sha256_compressed.data',

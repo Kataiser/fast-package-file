@@ -110,15 +110,19 @@ class PackagedDataFile:
         if len(file_loc_data) == 6:  # hash info exists
             if file_loc_data[5].startswith('md5   '):
                 hasher = hashlib.md5()
+                hasher.update(data_file_out)
+                hash_ = hasher.hexdigest()
             elif file_loc_data[5].startswith('sha256'):
                 hasher = hashlib.sha256()
+                hasher.update(data_file_out)
+                hash_ = hasher.hexdigest()
+            elif file_loc_data[5].startswith('crc32 '):
+                hash_ = zlib.crc32(data_file_out)
             else:
                 raise PackageDataError("{} is corrupted or malformed (hash method seems to be '{}')".format(self.__data_file_path, file_loc_data[5][:6]))
 
-            hasher.update(data_file_out)
-
-            if hasher.hexdigest() != file_loc_data[5][6:]:  # confirm hash
-                raise PackageDataError("{} is corrupted or malformed ('{}' hash mismatch: {} != {})".format(self.__data_file_path, file, hasher.hexdigest(), file_loc_data[5][6:]))
+            if hash_ != file_loc_data[5][6:]:  # confirm hash
+                raise PackageDataError("{} is corrupted or malformed ('{}' hash mismatch: {} != {})".format(self.__data_file_path, file, hash_, file_loc_data[5][6:]))
         else:  # basically a cheap hash
             if data_file_raw[0] != file_loc_data[3]:  # check if first byte matches
                 raise PackageDataError("{} is corrupted or malformed (first byte of file '{}' should be {}, but was loaded as {})".format(
@@ -212,7 +216,7 @@ def build(directory: str, target: str, compress: bool = True, keep_comp_threshol
     :param compress: Whether to compress the package, either with ``comp_func`` or Gzip by default.
     :param keep_comp_threshold: 0 through 1 (default is 0.98). For each input file, if compression doesn't improve file size by this ratio, the file is instead stored uncompressed. Set to 1 to
         compress every file no matter what.
-    :param hash_mode: The hash method to use to ensure file validity. Can be "md5" or "sha256". If :py:class:`None` (the default), only the first and last bytes are compared.
+    :param hash_mode: The hash method to use to ensure file validity. Can be "md5", "crc32", or "sha256". If :py:class:`None` (the default), only the first and last bytes are compared.
     :param comp_func: A supplied decompression function that takes :py:class:`bytes` and returns :py:class:`bytes`. Some recommendations: LZMA, LZMA2, Deflate, BZip2, Oodle, or Zstandard.
     :param crc32_paths: Store file paths as `crc32 <https://en.wikipedia.org/wiki/Cyclic_redundancy_check>`_ numbers. Useful for obfuscating file names and paths.
     :param progress_bar: Whether to show a progress bar (uses `tqdm <https://github.com/tqdm/tqdm>`_). If tqdm isn't installed, this is irrelevant.
@@ -299,6 +303,10 @@ def build(directory: str, target: str, compress: bool = True, keep_comp_threshol
             hasher = hashlib.sha256()
             hasher.update(input_file_data_raw)
             loc_data_save[file_path_out].append('sha256{}'.format(hasher.hexdigest()))
+        elif hash_mode == 'crc32':
+            loc_data_save[file_path_out].append('crc32 {}'.format(zlib.crc32(input_file_data_raw)))
+        elif hash_mode:
+            raise KeyError("""'hash_mode' isn't "md5", "sha256", or "crc32" """[:-1])
 
     comp_func_loc_data = comp_func if (comp_func and compress) else _gzip_compress_fix
     loc_data_save_json = json.dumps(loc_data_save, separators=(',', ':'), sort_keys=True).encode('utf-8')  # convert header to binary
