@@ -51,6 +51,7 @@ More details are available at https://fast-package-file.readthedocs.io/en/latest
 -   Includes the entire directory and subdirectories, not just surface-level files
 -   Files are compressed with Gzip, but only if compression improves file size (per file) and is enabled (per package file)
 -   Pretty good error handling when loading package files, just catch fast_package_file.PackageDataError
+-   A simple, open-source and documented file format that can easily be parsed and read in other languages
 -   Inspired by video game packaging, such as UE4's .pak or GTA V's .rpf formats
 -   Cross-platform, has CI for Linux, MacOS, and Windows
 
