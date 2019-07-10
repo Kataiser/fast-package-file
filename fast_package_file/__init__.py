@@ -24,6 +24,8 @@ try:
 except ImportError:
     tqdm = None
 
+FORMAT_VERSION = 1
+
 
 class PackagedDataFile:
     def __init__(self, data_file_path: str, prepare: bool = True, decomp_func: Callable[[bytes], bytes] = None):
@@ -47,6 +49,10 @@ class PackagedDataFile:
                 raise PackageDataError("Don't have read permissions for '{}'".format(self.__data_file_path))
 
             with open(self.__data_file_path, 'rb') as data_file_init:
+                format_version = int.from_bytes(data_file_init.read(2), byteorder='little')
+                if format_version != FORMAT_VERSION:
+                    raise PackageDataError("{} is corrupted or malformed (loaded file format version is {}, should be {})".format(self.__data_file_path, format_version, FORMAT_VERSION))
+
                 self.__loc_data_length = int.from_bytes(data_file_init.read(8), byteorder='little')  # read header length
                 if self.__loc_data_length < 0 or self.__loc_data_length > 1000000000000:  # 1 TB seems to be a reasonable limit
                     raise PackageDataError("{} is corrupted or malformed (header length is {})".format(self.__data_file_path, self.__loc_data_length))
@@ -93,7 +99,7 @@ class PackagedDataFile:
             raise PackageDataError("{} is corrupted or malformed (file '{}' doesn't exist in location header)".format(self.__data_file_path, file))
 
         with open(self.__data_file_path, 'rb') as data_file:
-            data_file.seek(file_loc_data[0] + self.__loc_data_length + 10)  # account for header and other data
+            data_file.seek(file_loc_data[0] + self.__loc_data_length + 12)  # account for header and other data
             data_file_raw = data_file.read(file_loc_data[1])
 
         if file_loc_data[2]:  # is compressed
@@ -314,6 +320,7 @@ def build(directory: str, target: str, compress: bool = True, keep_comp_threshol
     loc_data_save_length = (len(loc_data_save_out)).to_bytes(8, byteorder='little')  # get its length as an 8 bit binary
 
     with open(target, 'wb') as out_file:
+        out_file.write(FORMAT_VERSION.to_bytes(2, byteorder='little'))  # add the file format version
         out_file.write(loc_data_save_length)  # add the header's length
         out_file.write(compress.to_bytes(1, byteorder='little'))  # add the header's compressed state
         out_file.write(crc32_paths.to_bytes(1, byteorder='little'))  # add the header's path format

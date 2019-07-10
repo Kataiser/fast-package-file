@@ -158,10 +158,11 @@
 <p>Although the builder and loader for this format are implemented in Python, the format can of course be read by any languange.</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">0x00</span></code> (8-byte unsigned little-endian int): Size of the file location header, in bytes, as stored in the file (i.e. after compression).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">0x08</span></code> (1-byte bool): Whether the header is compressed (not including these first 10 bytes, which are never compressed).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">0x09</span></code> (1-byte bool): Whether the file paths use crc32 encoding.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">0x0A</span></code> (UTF-8 string): The file location header, as JSON.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0x00</span></code> (2-byte unsigned little-endian int): File format version.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0x01</span></code> (8-byte unsigned little-endian int): Size of the file location header, in bytes, as stored in the file (i.e. after compression).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0x09</span></code> (1-byte bool): Whether the header is compressed (not including these first 10 bytes, which are never compressed).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0x0A</span></code> (1-byte bool): Whether the file paths use crc32 encoding.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0x0B</span></code> (UTF-8 string): The file location header, as JSON.</p></li>
 <li><p>The rest is file data, placed end-to-end.</p></li>
 </ul>
 </div></blockquote>

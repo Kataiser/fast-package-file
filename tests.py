@@ -145,7 +145,7 @@ class TestTF2RichPresenseFunctions(unittest.TestCase):
             fast_package_file.PackagedDataFile('test_compressed_bad_header.data')
 
         try:
-            self.assertTrue("test_compressed_bad_header.data is corrupted or malformed (header length is " in e.exception.args[0])
+            self.assertEqual(e.exception.args[0], "test_compressed_bad_header.data is corrupted or malformed (loaded file format version is 1280, should be 1)")
         except AssertionError:
             print(e.exception.args[0])
             raise
